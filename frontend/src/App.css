@@ -1,28 +1,41 @@
-/* ===== STRUCTURE GÉNÉRALE ===== */
+/* ===== STRUCTURE GÉNÉRALE ===== Background */
+
 .app {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: var(--goldorak-space);
+  background:
+          linear-gradient(rgba(10, 10, 42, 0.45), rgba(26, 75, 140, 0.15)),
+          url('./assets/bg_Goldorak2.jpg') no-repeat center center fixed;
+  background-size: cover;
   position: relative;
   overflow-x: hidden;
 }
 
-.app::before {
-  content: '';
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background:
-          url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1" fill="rgba(100, 223, 223, 0.1)"/></svg>'),
-          url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><polygon points="100,20 140,60 100,100 60,60" fill="none" stroke="rgba(255, 46, 46, 0.05)" stroke-width="1"/></svg>');
-  background-size: 100px 100px, 200px 200px;
-  opacity: 0.3;
-  z-index: -1;
-  animation: float 20s linear infinite;
-}
+/*.app {*/
+/*  min-height: 100vh;*/
+/*  display: flex;*/
+/*  flex-direction: column;*/
+/*  background: var(--goldorak-space);*/
+/*  position: relative;*/
+/*  overflow-x: hidden;*/
+/*}*/
+
+/*.app::before {*/
+/*  content: '';*/
+/*  position: fixed;*/
+/*  top: 0;*/
+/*  left: 0;*/
+/*  right: 0;*/
+/*  bottom: 0;*/
+/*  background:*/
+/*          url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="100" height="100" viewBox="0 0 100 100"><circle cx="50" cy="50" r="1" fill="rgba(100, 223, 223, 0.1)"/></svg>'),*/
+/*          url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 200 200"><polygon points="100,20 140,60 100,100 60,60" fill="none" stroke="rgba(255, 46, 46, 0.05)" stroke-width="1"/></svg>');*/
+/*  background-size: 100px 100px, 200px 200px;*/
+/*  opacity: 0.3;*/
+/*  z-index: -1;*/
+/*  animation: float 20s linear infinite;*/
+/*}*/
 
 .dashboard {
   flex: 1;
@@ -91,7 +104,7 @@
 }
 
 .logo-image {
-  max-height: 120px; /* Ajustez selon la taille de votre logo */
+  max-height: 200px; /* Ajustez selon la taille de votre logo */
   width: auto;
   object-fit: contain;
 }
@@ -362,7 +375,7 @@
 }
 
 .stat-label {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   color: var(--goldorak-silver);
   font-weight: 500;
   text-transform: uppercase;

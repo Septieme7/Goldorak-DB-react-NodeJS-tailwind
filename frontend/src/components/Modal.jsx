@@ -114,13 +114,31 @@ function Modal({ item, type, endpoint, onSave, onClose }) {
         );
     };
 
+    // Fonction pour obtenir un titre personnalisé selon le endpoint
+    const getModalTitle = () => {
+        const baseTitle = type === 'view' ? 'Détails' : type === 'edit' ? 'Modifier' : 'Créer';
+
+        // Titres personnalisés pour certains endpoints
+        const customTitles = {
+            'armes': 'Armes de Goldorak',
+            'personnages': 'Personnages',
+            'robots': 'Robots',
+            'episodes': 'Épisodes',
+            'monstres': 'Monstres',
+            'vaisseaux': 'Vaisseaux'
+        };
+
+        if (type === 'view' && customTitles[endpoint.toLowerCase()]) {
+            return customTitles[endpoint.toLowerCase()];
+        }
+
+        return `${baseTitle} ${endpoint}`;
+    };
+
     return (
         <div className="modal-overlay" onClick={onClose}>
             <div className="modal-content" onClick={(e) => e.stopPropagation()}>
-                <h2>
-                    {type === 'view' ? 'Détails' :
-                        type === 'edit' ? 'Modifier' : 'Créer'} {endpoint}
-                </h2>
+                <h2>{getModalTitle()}</h2>
                 <form onSubmit={handleSubmit} className="modal-body">
                     {fields.length > 0 ? (
                         fields.map(renderField)
