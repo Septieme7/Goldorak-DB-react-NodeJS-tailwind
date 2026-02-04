@@ -1,13 +1,25 @@
-// api.js
+// api.js - VERSION CORRIGÉE
 const API_BASE_URL = 'http://localhost:8800/api/v1';
 
-// Fonction helper pour gérer les réponses
+// Fonction helper améliorée
 const handleResponse = async (response) => {
     if (!response.ok) {
         const errorText = await response.text();
         throw new Error(`API Error ${response.status}: ${errorText}`);
     }
-    return response.json();
+
+    const result = await response.json();
+
+    // Si l'API retourne un format standardisé {success, data, message}
+    if (result.success !== undefined) {
+        if (!result.success) {
+            throw new Error(result.error || 'API request failed');
+        }
+        return result.data; // Retourne seulement les données
+    }
+
+    // Si format legacy (tableau direct)
+    return result;
 };
 
 export const api = {
@@ -148,4 +160,8 @@ export const api = {
     deleteMonstre: (id) => fetch(`${API_BASE_URL}/monstres/${id}`, {
         method: 'DELETE'
     }).then(handleResponse),
+
+    // Stats
+    getStats: () => fetch(`${API_BASE_URL}/stats`).then(handleResponse),
+    getHealth: () => fetch(`${API_BASE_URL}/health`).then(handleResponse)
 };

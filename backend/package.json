@@ -9,14 +9,21 @@
     "dev": "nodemon index.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "keywords": ["goldorak", "api", "express", "mysql", "crud"],
+  "keywords": [
+    "goldorak",
+    "api",
+    "express",
+    "mysql",
+    "crud"
+  ],
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "cors": "^2.8.5",
+    "cors": "^2.8.6",
+    "dotenv": "^17.2.3",
     "express": "^5.2.1",
-    "mysql2": "^3.16.1",
-    "express-validator": "^7.0.1"
+    "express-validator": "^7.3.1",
+    "mysql2": "^3.16.3"
   },
   "devDependencies": {
     "nodemon": "^3.1.11"

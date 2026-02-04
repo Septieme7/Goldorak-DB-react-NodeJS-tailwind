@@ -1,23 +1,42 @@
+// index.js
 // Importation des modules
 import express from 'express';
 import mysql from 'mysql2/promise';
 import cors from 'cors';
 import { body, validationResult } from 'express-validator';
+import dotenv from 'dotenv';
 
-// Création de l'application Express
-const app = express();
-const PORT = 8800;
+// Charger les variables d'environnement
+dotenv.config();
 
 // ================ CONFIGURATION ================
+const app = express();
+const PORT = process.env.PORT || 8800;
+const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:5173';
+const NODE_ENV = process.env.NODE_ENV || 'development';
+
+// ================ MIDDLEWARES ================
 app.use(cors({
-    origin: 'http://localhost:5173',
+    origin: process.env.CORS_ORIGIN || FRONTEND_URL,
     credentials: true,
-    methods: ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization']
+    methods: process.env.CORS_METHODS
+        ? process.env.CORS_METHODS.split(',')
+        : ['GET', 'POST', 'PATCH', 'DELETE', 'OPTIONS'],
+    allowedHeaders: process.env.CORS_ALLOWED_HEADERS
+        ? process.env.CORS_ALLOWED_HEADERS.split(',')
+        : ['Content-Type', 'Authorization']
 }));
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// Middleware de logging pour le développement
+if (NODE_ENV === 'development') {
+    app.use((req, res, next) => {
+        console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+        next();
+    });
+}
 
 // ================ BASE DE DONNÉES ================
 let db;
@@ -25,24 +44,47 @@ let db;
 async function initDatabase() {
     try {
         db = await mysql.createConnection({
-            host: "127.0.0.1",
-            user: "root",
-            password: "73&deluxeQQL5&4",
-            database: "goldorak_db",
+            host: process.env.DB_HOST || "127.0.0.1",
+            user: process.env.DB_USER || "root",
+            password: process.env.DB_PASSWORD || "",
+            database: process.env.DB_NAME || "goldorak_db",
+            port: process.env.DB_PORT || 3306,
+            charset: 'utf8mb4'
         });
-        console.log('✅ Connexion à la base de données établie');
+
+        console.log(`✅ Connexion à la base de données "${process.env.DB_NAME || 'goldorak_db'}" établie`);
+
+        // Tester la connexion
+        await db.query('SELECT 1');
+        console.log('✅ Test de connexion à la base de données réussi');
+
         return db;
     } catch (error) {
         console.error('❌ Erreur de connexion à la base de données:', error.message);
-        process.exit(1);
+        console.error('Configuration utilisée:', {
+            host: process.env.DB_HOST,
+            database: process.env.DB_NAME,
+            user: process.env.DB_USER,
+            port: process.env.DB_PORT
+        });
+
+        if (NODE_ENV === 'production') {
+            process.exit(1);
+        } else {
+            throw error;
+        }
     }
 }
 
-// ================ MIDDLEWARES ================
+// ================ MIDDLEWARES PERSONNALISÉS ================
 const validateData = (req, res, next) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
+        return res.status(400).json({
+            success: false,
+            error: 'Erreur de validation',
+            details: errors.array()
+        });
     }
     next();
 };
@@ -54,7 +96,11 @@ const handleAsync = (fn) => (req, res, next) => {
 // ================ ROUTES PERSONNAGES ================
 app.get('/api/v1/personnages', handleAsync(async (req, res) => {
     const [rows] = await db.query('SELECT * FROM personnages ORDER BY id');
-    res.json(rows);
+    res.json({
+        success: true,
+        count: rows.length,
+        data: rows
+    });
 }));
 
 app.get('/api/v1/personnages/:id', handleAsync(async (req, res) => {
@@ -62,10 +108,16 @@ app.get('/api/v1/personnages/:id', handleAsync(async (req, res) => {
     const [rows] = await db.query('SELECT * FROM personnages WHERE id = ?', [id]);
 
     if (rows.length === 0) {
-        return res.status(404).json({ error: 'Personnage non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Personnage non trouvé'
+        });
     }
 
-    res.json(rows[0]);
+    res.json({
+        success: true,
+        data: rows[0]
+    });
 }));
 
 app.post('/api/v1/personnages', [
@@ -83,6 +135,7 @@ app.post('/api/v1/personnages', [
 
     if (existing.length > 0) {
         return res.status(409).json({
+            success: false,
             error: `Le personnage "${nom_fr}" existe déjà`
         });
     }
@@ -105,7 +158,11 @@ app.post('/api/v1/personnages', [
         [result.insertId]
     );
 
-    res.status(201).json(newPersonnage[0]);
+    res.status(201).json({
+        success: true,
+        message: 'Personnage créé avec succès',
+        data: newPersonnage[0]
+    });
 }));
 
 app.patch('/api/v1/personnages/:id', [
@@ -122,7 +179,10 @@ app.patch('/api/v1/personnages/:id', [
     );
 
     if (existing.length === 0) {
-        return res.status(404).json({ error: 'Personnage non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Personnage non trouvé'
+        });
     }
 
     const setClauses = [];
@@ -137,7 +197,10 @@ app.patch('/api/v1/personnages/:id', [
     });
 
     if (setClauses.length === 0) {
-        return res.status(400).json({ error: 'Aucune donnée à mettre à jour' });
+        return res.status(400).json({
+            success: false,
+            error: 'Aucune donnée à mettre à jour'
+        });
     }
 
     values.push(id);
@@ -145,7 +208,12 @@ app.patch('/api/v1/personnages/:id', [
     await db.query(query, values);
 
     const [updated] = await db.query('SELECT * FROM personnages WHERE id = ?', [id]);
-    res.json(updated[0]);
+
+    res.json({
+        success: true,
+        message: 'Personnage mis à jour avec succès',
+        data: updated[0]
+    });
 }));
 
 app.delete('/api/v1/personnages/:id', handleAsync(async (req, res) => {
@@ -157,7 +225,10 @@ app.delete('/api/v1/personnages/:id', handleAsync(async (req, res) => {
     );
 
     if (existing.length === 0) {
-        return res.status(404).json({ error: 'Personnage non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Personnage non trouvé'
+        });
     }
 
     const [robotDeps] = await db.query(
@@ -172,6 +243,7 @@ app.delete('/api/v1/personnages/:id', handleAsync(async (req, res) => {
 
     if (robotDeps[0].count > 0 || vaisseauDeps[0].count > 0) {
         return res.status(400).json({
+            success: false,
             error: `Impossible de supprimer ce personnage car il est lié à ${robotDeps[0].count} robot(s) et ${vaisseauDeps[0].count} vaisseau(x)`
         });
     }
@@ -193,7 +265,12 @@ app.get('/api/v1/robots', handleAsync(async (req, res) => {
         ORDER BY r.id
     `;
     const [rows] = await db.query(query);
-    res.json(rows);
+
+    res.json({
+        success: true,
+        count: rows.length,
+        data: rows
+    });
 }));
 
 app.get('/api/v1/robots/:id', handleAsync(async (req, res) => {
@@ -207,10 +284,16 @@ app.get('/api/v1/robots/:id', handleAsync(async (req, res) => {
     const [rows] = await db.query(query, [id]);
 
     if (rows.length === 0) {
-        return res.status(404).json({ error: 'Robot non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Robot non trouvé'
+        });
     }
 
-    res.json(rows[0]);
+    res.json({
+        success: true,
+        data: rows[0]
+    });
 }));
 
 app.post('/api/v1/robots', [
@@ -227,6 +310,7 @@ app.post('/api/v1/robots', [
 
     if (existing.length > 0) {
         return res.status(409).json({
+            success: false,
             error: `Le robot "${nom_fr}" existe déjà`
         });
     }
@@ -239,6 +323,7 @@ app.post('/api/v1/robots', [
 
         if (pilote.length === 0) {
             return res.status(400).json({
+                success: false,
                 error: `Le pilote avec ID ${pilote_id} n'existe pas`
             });
         }
@@ -266,7 +351,11 @@ app.post('/api/v1/robots', [
         [result.insertId]
     );
 
-    res.status(201).json(newRobot[0]);
+    res.status(201).json({
+        success: true,
+        message: 'Robot créé avec succès',
+        data: newRobot[0]
+    });
 }));
 
 app.patch('/api/v1/robots/:id', handleAsync(async (req, res) => {
@@ -279,7 +368,10 @@ app.patch('/api/v1/robots/:id', handleAsync(async (req, res) => {
     );
 
     if (existing.length === 0) {
-        return res.status(404).json({ error: 'Robot non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Robot non trouvé'
+        });
     }
 
     if (updates.pilote_id) {
@@ -290,6 +382,7 @@ app.patch('/api/v1/robots/:id', handleAsync(async (req, res) => {
 
         if (pilote.length === 0) {
             return res.status(400).json({
+                success: false,
                 error: `Le pilote avec ID ${updates.pilote_id} n'existe pas`
             });
         }
@@ -309,7 +402,10 @@ app.patch('/api/v1/robots/:id', handleAsync(async (req, res) => {
     });
 
     if (setClauses.length === 0) {
-        return res.status(400).json({ error: 'Aucune donnée à mettre à jour' });
+        return res.status(400).json({
+            success: false,
+            error: 'Aucune donnée à mettre à jour'
+        });
     }
 
     values.push(id);
@@ -324,7 +420,11 @@ app.patch('/api/v1/robots/:id', handleAsync(async (req, res) => {
         [id]
     );
 
-    res.json(updated[0]);
+    res.json({
+        success: true,
+        message: 'Robot mis à jour avec succès',
+        data: updated[0]
+    });
 }));
 
 app.delete('/api/v1/robots/:id', handleAsync(async (req, res) => {
@@ -336,7 +436,10 @@ app.delete('/api/v1/robots/:id', handleAsync(async (req, res) => {
     );
 
     if (existing.length === 0) {
-        return res.status(404).json({ error: 'Robot non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Robot non trouvé'
+        });
     }
 
     const [armeDeps] = await db.query(
@@ -346,6 +449,7 @@ app.delete('/api/v1/robots/:id', handleAsync(async (req, res) => {
 
     if (armeDeps[0].count > 0) {
         return res.status(400).json({
+            success: false,
             error: `Impossible de supprimer ce robot car il est lié à ${armeDeps[0].count} arme(s)`
         });
     }
@@ -367,7 +471,12 @@ app.get('/api/v1/vaisseaux', handleAsync(async (req, res) => {
         ORDER BY v.id
     `;
     const [rows] = await db.query(query);
-    res.json(rows);
+
+    res.json({
+        success: true,
+        count: rows.length,
+        data: rows
+    });
 }));
 
 app.get('/api/v1/vaisseaux/:id', handleAsync(async (req, res) => {
@@ -381,10 +490,16 @@ app.get('/api/v1/vaisseaux/:id', handleAsync(async (req, res) => {
     const [rows] = await db.query(query, [id]);
 
     if (rows.length === 0) {
-        return res.status(404).json({ error: 'Vaisseau non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Vaisseau non trouvé'
+        });
     }
 
-    res.json(rows[0]);
+    res.json({
+        success: true,
+        data: rows[0]
+    });
 }));
 
 app.post('/api/v1/vaisseaux', [
@@ -402,6 +517,7 @@ app.post('/api/v1/vaisseaux', [
 
     if (existing.length > 0) {
         return res.status(409).json({
+            success: false,
             error: `Le vaisseau "${nom_fr}" existe déjà`
         });
     }
@@ -414,6 +530,7 @@ app.post('/api/v1/vaisseaux', [
 
         if (pilote.length === 0) {
             return res.status(400).json({
+                success: false,
                 error: `Le pilote avec ID ${pilote_id} n'existe pas`
             });
         }
@@ -440,7 +557,11 @@ app.post('/api/v1/vaisseaux', [
         [result.insertId]
     );
 
-    res.status(201).json(newVaisseau[0]);
+    res.status(201).json({
+        success: true,
+        message: 'Vaisseau créé avec succès',
+        data: newVaisseau[0]
+    });
 }));
 
 app.patch('/api/v1/vaisseaux/:id', [
@@ -456,7 +577,10 @@ app.patch('/api/v1/vaisseaux/:id', [
     );
 
     if (existing.length === 0) {
-        return res.status(404).json({ error: 'Vaisseau non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Vaisseau non trouvé'
+        });
     }
 
     if (updates.pilote_id) {
@@ -467,6 +591,7 @@ app.patch('/api/v1/vaisseaux/:id', [
 
         if (pilote.length === 0) {
             return res.status(400).json({
+                success: false,
                 error: `Le pilote avec ID ${updates.pilote_id} n'existe pas`
             });
         }
@@ -484,7 +609,10 @@ app.patch('/api/v1/vaisseaux/:id', [
     });
 
     if (setClauses.length === 0) {
-        return res.status(400).json({ error: 'Aucune donnée à mettre à jour' });
+        return res.status(400).json({
+            success: false,
+            error: 'Aucune donnée à mettre à jour'
+        });
     }
 
     values.push(id);
@@ -499,7 +627,11 @@ app.patch('/api/v1/vaisseaux/:id', [
         [id]
     );
 
-    res.json(updated[0]);
+    res.json({
+        success: true,
+        message: 'Vaisseau mis à jour avec succès',
+        data: updated[0]
+    });
 }));
 
 app.delete('/api/v1/vaisseaux/:id', handleAsync(async (req, res) => {
@@ -511,7 +643,10 @@ app.delete('/api/v1/vaisseaux/:id', handleAsync(async (req, res) => {
     );
 
     if (existing.length === 0) {
-        return res.status(404).json({ error: 'Vaisseau non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Vaisseau non trouvé'
+        });
     }
 
     await db.query('DELETE FROM vaisseaux WHERE id = ?', [id]);
@@ -531,7 +666,12 @@ app.get('/api/v1/armes', handleAsync(async (req, res) => {
         ORDER BY a.id
     `;
     const [rows] = await db.query(query);
-    res.json(rows);
+
+    res.json({
+        success: true,
+        count: rows.length,
+        data: rows
+    });
 }));
 
 app.get('/api/v1/armes/:id', handleAsync(async (req, res) => {
@@ -545,10 +685,16 @@ app.get('/api/v1/armes/:id', handleAsync(async (req, res) => {
     const [rows] = await db.query(query, [id]);
 
     if (rows.length === 0) {
-        return res.status(404).json({ error: 'Arme non trouvée' });
+        return res.status(404).json({
+            success: false,
+            error: 'Arme non trouvée'
+        });
     }
 
-    res.json(rows[0]);
+    res.json({
+        success: true,
+        data: rows[0]
+    });
 }));
 
 app.post('/api/v1/armes', [
@@ -566,6 +712,7 @@ app.post('/api/v1/armes', [
 
     if (existing.length > 0) {
         return res.status(409).json({
+            success: false,
             error: `L'arme "${nom_fr}" existe déjà`
         });
     }
@@ -578,6 +725,7 @@ app.post('/api/v1/armes', [
 
         if (robot.length === 0) {
             return res.status(400).json({
+                success: false,
                 error: `Le robot avec ID ${robot_id} n'existe pas`
             });
         }
@@ -604,7 +752,11 @@ app.post('/api/v1/armes', [
         [result.insertId]
     );
 
-    res.status(201).json(newArme[0]);
+    res.status(201).json({
+        success: true,
+        message: 'Arme créée avec succès',
+        data: newArme[0]
+    });
 }));
 
 app.patch('/api/v1/armes/:id', [
@@ -620,7 +772,10 @@ app.patch('/api/v1/armes/:id', [
     );
 
     if (existing.length === 0) {
-        return res.status(404).json({ error: 'Arme non trouvée' });
+        return res.status(404).json({
+            success: false,
+            error: 'Arme non trouvée'
+        });
     }
 
     if (updates.robot_id) {
@@ -631,6 +786,7 @@ app.patch('/api/v1/armes/:id', [
 
         if (robot.length === 0) {
             return res.status(400).json({
+                success: false,
                 error: `Le robot avec ID ${updates.robot_id} n'existe pas`
             });
         }
@@ -648,7 +804,10 @@ app.patch('/api/v1/armes/:id', [
     });
 
     if (setClauses.length === 0) {
-        return res.status(400).json({ error: 'Aucune donnée à mettre à jour' });
+        return res.status(400).json({
+            success: false,
+            error: 'Aucune donnée à mettre à jour'
+        });
     }
 
     values.push(id);
@@ -663,7 +822,11 @@ app.patch('/api/v1/armes/:id', [
         [id]
     );
 
-    res.json(updated[0]);
+    res.json({
+        success: true,
+        message: 'Arme mise à jour avec succès',
+        data: updated[0]
+    });
 }));
 
 app.delete('/api/v1/armes/:id', handleAsync(async (req, res) => {
@@ -675,7 +838,10 @@ app.delete('/api/v1/armes/:id', handleAsync(async (req, res) => {
     );
 
     if (existing.length === 0) {
-        return res.status(404).json({ error: 'Arme non trouvée' });
+        return res.status(404).json({
+            success: false,
+            error: 'Arme non trouvée'
+        });
     }
 
     await db.query('DELETE FROM armes WHERE id = ?', [id]);
@@ -695,7 +861,12 @@ app.get('/api/v1/monstres', handleAsync(async (req, res) => {
         ORDER BY m.id
     `;
     const [rows] = await db.query(query);
-    res.json(rows);
+
+    res.json({
+        success: true,
+        count: rows.length,
+        data: rows
+    });
 }));
 
 app.get('/api/v1/monstres/:id', handleAsync(async (req, res) => {
@@ -709,10 +880,16 @@ app.get('/api/v1/monstres/:id', handleAsync(async (req, res) => {
     const [rows] = await db.query(query, [id]);
 
     if (rows.length === 0) {
-        return res.status(404).json({ error: 'Monstre non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Monstre non trouvé'
+        });
     }
 
-    res.json(rows[0]);
+    res.json({
+        success: true,
+        data: rows[0]
+    });
 }));
 
 app.post('/api/v1/monstres', [
@@ -729,6 +906,7 @@ app.post('/api/v1/monstres', [
 
     if (existing.length > 0) {
         return res.status(409).json({
+            success: false,
             error: `Le monstre "${nom_fr}" existe déjà`
         });
     }
@@ -741,6 +919,7 @@ app.post('/api/v1/monstres', [
 
         if (episode.length === 0) {
             return res.status(400).json({
+                success: false,
                 error: `L'épisode avec ID ${episode_id} n'existe pas`
             });
         }
@@ -768,7 +947,11 @@ app.post('/api/v1/monstres', [
         [result.insertId]
     );
 
-    res.status(201).json(newMonstre[0]);
+    res.status(201).json({
+        success: true,
+        message: 'Monstre créé avec succès',
+        data: newMonstre[0]
+    });
 }));
 
 app.patch('/api/v1/monstres/:id', [
@@ -784,7 +967,10 @@ app.patch('/api/v1/monstres/:id', [
     );
 
     if (existing.length === 0) {
-        return res.status(404).json({ error: 'Monstre non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Monstre non trouvé'
+        });
     }
 
     if (updates.episode_id) {
@@ -795,6 +981,7 @@ app.patch('/api/v1/monstres/:id', [
 
         if (episode.length === 0) {
             return res.status(400).json({
+                success: false,
                 error: `L'épisode avec ID ${updates.episode_id} n'existe pas`
             });
         }
@@ -814,7 +1001,10 @@ app.patch('/api/v1/monstres/:id', [
     });
 
     if (setClauses.length === 0) {
-        return res.status(400).json({ error: 'Aucune donnée à mettre à jour' });
+        return res.status(400).json({
+            success: false,
+            error: 'Aucune donnée à mettre à jour'
+        });
     }
 
     values.push(id);
@@ -829,7 +1019,11 @@ app.patch('/api/v1/monstres/:id', [
         [id]
     );
 
-    res.json(updated[0]);
+    res.json({
+        success: true,
+        message: 'Monstre mis à jour avec succès',
+        data: updated[0]
+    });
 }));
 
 app.delete('/api/v1/monstres/:id', handleAsync(async (req, res) => {
@@ -841,7 +1035,10 @@ app.delete('/api/v1/monstres/:id', handleAsync(async (req, res) => {
     );
 
     if (existing.length === 0) {
-        return res.status(404).json({ error: 'Monstre non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Monstre non trouvé'
+        });
     }
 
     await db.query('DELETE FROM monstres WHERE id = ?', [id]);
@@ -855,7 +1052,12 @@ app.delete('/api/v1/monstres/:id', handleAsync(async (req, res) => {
 // ================ ROUTES ÉPISODES ================
 app.get('/api/v1/episodes', handleAsync(async (req, res) => {
     const [rows] = await db.query('SELECT * FROM episodes ORDER BY numero_fr');
-    res.json(rows);
+
+    res.json({
+        success: true,
+        count: rows.length,
+        data: rows
+    });
 }));
 
 app.get('/api/v1/episodes/:id', handleAsync(async (req, res) => {
@@ -863,10 +1065,16 @@ app.get('/api/v1/episodes/:id', handleAsync(async (req, res) => {
     const [rows] = await db.query('SELECT * FROM episodes WHERE id = ?', [id]);
 
     if (rows.length === 0) {
-        return res.status(404).json({ error: 'Épisode non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Épisode non trouvé'
+        });
     }
 
-    res.json(rows[0]);
+    res.json({
+        success: true,
+        data: rows[0]
+    });
 }));
 
 app.post('/api/v1/episodes', [
@@ -884,6 +1092,7 @@ app.post('/api/v1/episodes', [
 
     if (existing.length > 0) {
         return res.status(409).json({
+            success: false,
             error: `Un épisode avec le même titre et numéro existe déjà`
         });
     }
@@ -907,7 +1116,11 @@ app.post('/api/v1/episodes', [
         [result.insertId]
     );
 
-    res.status(201).json(newEpisode[0]);
+    res.status(201).json({
+        success: true,
+        message: 'Épisode créé avec succès',
+        data: newEpisode[0]
+    });
 }));
 
 app.patch('/api/v1/episodes/:id', [
@@ -924,7 +1137,10 @@ app.patch('/api/v1/episodes/:id', [
     );
 
     if (existing.length === 0) {
-        return res.status(404).json({ error: 'Épisode non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Épisode non trouvé'
+        });
     }
 
     const setClauses = [];
@@ -941,7 +1157,10 @@ app.patch('/api/v1/episodes/:id', [
     });
 
     if (setClauses.length === 0) {
-        return res.status(400).json({ error: 'Aucune donnée à mettre à jour' });
+        return res.status(400).json({
+            success: false,
+            error: 'Aucune donnée à mettre à jour'
+        });
     }
 
     values.push(id);
@@ -953,7 +1172,11 @@ app.patch('/api/v1/episodes/:id', [
         [id]
     );
 
-    res.json(updated[0]);
+    res.json({
+        success: true,
+        message: 'Épisode mis à jour avec succès',
+        data: updated[0]
+    });
 }));
 
 app.delete('/api/v1/episodes/:id', handleAsync(async (req, res) => {
@@ -965,7 +1188,10 @@ app.delete('/api/v1/episodes/:id', handleAsync(async (req, res) => {
     );
 
     if (existing.length === 0) {
-        return res.status(404).json({ error: 'Épisode non trouvé' });
+        return res.status(404).json({
+            success: false,
+            error: 'Épisode non trouvé'
+        });
     }
 
     // Vérifier si des monstres sont liés à cet épisode
@@ -976,6 +1202,7 @@ app.delete('/api/v1/episodes/:id', handleAsync(async (req, res) => {
 
     if (monstreDeps[0].count > 0) {
         return res.status(400).json({
+            success: false,
             error: `Impossible de supprimer cet épisode car ${monstreDeps[0].count} monstre(s) y sont liés`
         });
     }
@@ -988,12 +1215,93 @@ app.delete('/api/v1/episodes/:id', handleAsync(async (req, res) => {
     });
 }));
 
+// ================ STATISTIQUES ================
+app.get('/api/v1/stats', handleAsync(async (req, res) => {
+    try {
+        const [personnages] = await db.query('SELECT COUNT(*) as count FROM personnages');
+        const [robots] = await db.query('SELECT COUNT(*) as count FROM robots');
+        const [armes] = await db.query('SELECT COUNT(*) as count FROM armes');
+        const [episodes] = await db.query('SELECT COUNT(*) as count FROM episodes');
+        const [monstres] = await db.query('SELECT COUNT(*) as count FROM monstres');
+        const [vaisseaux] = await db.query('SELECT COUNT(*) as count FROM vaisseaux');
+
+        res.json({
+            success: true,
+            data: {
+                personnages: personnages[0].count,
+                robots: robots[0].count,
+                armes: armes[0].count,
+                episodes: episodes[0].count,
+                monstres: monstres[0].count,
+                vaisseaux: vaisseaux[0].count
+            }
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            error: 'Erreur lors du calcul des statistiques'
+        });
+    }
+}));
+
+// ================ ROUTE DE SANTÉ ================
+app.get('/api/v1/health', handleAsync(async (req, res) => {
+    try {
+        // Tester la connexion à la base de données
+        await db.query('SELECT 1');
+
+        res.json({
+            success: true,
+            status: 'online',
+            timestamp: new Date().toISOString(),
+            database: 'connected',
+            environment: NODE_ENV,
+            version: process.env.APP_VERSION || '1.0.0'
+        });
+    } catch (error) {
+        res.status(503).json({
+            success: false,
+            status: 'offline',
+            timestamp: new Date().toISOString(),
+            database: 'disconnected',
+            error: error.message
+        });
+    }
+}));
+
+// ================ ROUTE RACINE ================
+app.get('/', (req, res) => {
+    res.json({
+        success: true,
+        message: `API ${process.env.APP_NAME || 'Goldorak'} - Bienvenue!`,
+        version: process.env.APP_VERSION || '1.0.0',
+        environment: NODE_ENV,
+        endpoints: {
+            personnages: '/api/v1/personnages',
+            robots: '/api/v1/robots',
+            vaisseaux: '/api/v1/vaisseaux',
+            armes: '/api/v1/armes',
+            monstres: '/api/v1/monstres',
+            episodes: '/api/v1/episodes',
+            stats: '/api/v1/stats',
+            health: '/api/v1/health'
+        },
+        documentation: `http://localhost:${PORT}`,
+        frontend: FRONTEND_URL
+    });
+});
+
 // ================ GESTION DES ERREURS ================
 app.use((err, req, res, next) => {
-    console.error('🔥 Erreur serveur:', err);
+    console.error(`🔥 Erreur serveur [${new Date().toISOString()}]:`, err);
+
+    if (NODE_ENV === 'development') {
+        console.error('Stack trace:', err.stack);
+    }
 
     if (err.name === 'ValidationError') {
         return res.status(400).json({
+            success: false,
             error: 'Erreur de validation',
             details: err.errors
         });
@@ -1001,84 +1309,138 @@ app.use((err, req, res, next) => {
 
     if (err.code === 'ER_DUP_ENTRY') {
         return res.status(409).json({
+            success: false,
             error: 'Entrée en double dans la base de données'
         });
     }
 
+    // Erreur MySQL
+    if (err.code?.startsWith('ER_')) {
+        return res.status(500).json({
+            success: false,
+            error: 'Erreur de base de données',
+            message: NODE_ENV === 'development' ? err.message : 'Erreur interne'
+        });
+    }
+
     res.status(500).json({
+        success: false,
         error: 'Erreur interne du serveur',
-        message: process.env.NODE_ENV === 'development' ? err.message : undefined
+        message: NODE_ENV === 'development' ? err.message : undefined
     });
 });
 
-// ================ ROUTE RACINE ================
-app.get('/', (req, res) => {
-    res.json({
-        message: 'API Goldorak - Bienvenue!',
-        version: '1.0.0',
-        endpoints: {
-            personnages: '/api/v1/personnages',
-            robots: '/api/v1/robots',
-            vaisseaux: '/api/v1/vaisseaux',
-            armes: '/api/v1/armes',
-            monstres: '/api/v1/monstres',
-            episodes: '/api/v1/episodes'
-        }
+// ================ ROUTE 404 ================
+app.use((req, res) => {
+    res.status(404).json({
+        success: false,
+        error: 'Route non trouvée',
+        requestedUrl: req.originalUrl
     });
 });
 
 // ================ DÉMARRAGE DU SERVEUR ================
 async function startServer() {
-    await initDatabase();
+    try {
+        await initDatabase();
 
-    app.listen(PORT, () => {
-        console.log(`🚀 Serveur Goldorak API démarré sur le port ${PORT}`);
-        console.log(`📚 Documentation: http://localhost:${PORT}`);
-        console.log('\n📡 Endpoints disponibles:');
-        console.log('   GET    /');
-        console.log('\n   === CRUD Personnages ===');
-        console.log('   GET    /api/v1/personnages');
-        console.log('   GET    /api/v1/personnages/:id');
-        console.log('   POST   /api/v1/personnages');
-        console.log('   PATCH  /api/v1/personnages/:id');
-        console.log('   DELETE /api/v1/personnages/:id');
-        console.log('\n   === CRUD Robots ===');
-        console.log('   GET    /api/v1/robots');
-        console.log('   GET    /api/v1/robots/:id');
-        console.log('   POST   /api/v1/robots');
-        console.log('   PATCH  /api/v1/robots/:id');
-        console.log('   DELETE /api/v1/robots/:id');
-        console.log('\n   === CRUD Vaisseaux ===');
-        console.log('   GET    /api/v1/vaisseaux');
-        console.log('   GET    /api/v1/vaisseaux/:id');
-        console.log('   POST   /api/v1/vaisseaux');
-        console.log('   PATCH  /api/v1/vaisseaux/:id');
-        console.log('   DELETE /api/v1/vaisseaux/:id');
-        console.log('\n   === CRUD Armes ===');
-        console.log('   GET    /api/v1/armes');
-        console.log('   GET    /api/v1/armes/:id');
-        console.log('   POST   /api/v1/armes');
-        console.log('   PATCH  /api/v1/armes/:id');
-        console.log('   DELETE /api/v1/armes/:id');
-        console.log('\n   === CRUD Monstres ===');
-        console.log('   GET    /api/v1/monstres');
-        console.log('   GET    /api/v1/monstres/:id');
-        console.log('   POST   /api/v1/monstres');
-        console.log('   PATCH  /api/v1/monstres/:id');
-        console.log('   DELETE /api/v1/monstres/:id');
-        console.log('\n   === CRUD Épisodes ===');
-        console.log('   GET    /api/v1/episodes');
-        console.log('   GET    /api/v1/episodes/:id');
-        console.log('   POST   /api/v1/episodes');
-        console.log('   PATCH  /api/v1/episodes/:id');
-        console.log('   DELETE /api/v1/episodes/:id');
-        console.log('\n🌐 Frontend: http://localhost:5173');
-        console.log('🔗 API: http://localhost:8800');
-    });
+        app.listen(PORT, () => {
+            const apiBase = `http://localhost:${PORT}/api/v1`;
+
+            console.log(`\n✨ ${process.env.APP_NAME || 'Goldorak API'} v${process.env.APP_VERSION || '1.0.0'}`);
+            console.log(`📍 Port: ${PORT} | Env: ${NODE_ENV} | DB: ${process.env.DB_NAME || 'goldorak_db'}`);
+            console.log(`🔗 Frontend: ${FRONTEND_URL}`);
+            console.log(`📅 ${new Date().toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'medium' })}`);
+            console.log('━'.repeat(50));
+
+            const endpoints = {
+                '👥 Personnages': [
+                    `GET    ${apiBase}/personnages`,
+                    `GET    ${apiBase}/personnages/:id`,
+                    `POST   ${apiBase}/personnages`,
+                    `PATCH  ${apiBase}/personnages/:id`,
+                    `DELETE ${apiBase}/personnages/:id`
+                ],
+                '🤖 Robots': [
+                    `GET    ${apiBase}/robots`,
+                    `GET    ${apiBase}/robots/:id`,
+                    `POST   ${apiBase}/robots`,
+                    `PATCH  ${apiBase}/robots/:id`,
+                    `DELETE ${apiBase}/robots/:id`
+                ],
+                '🚀 Vaisseaux': [
+                    `GET    ${apiBase}/vaisseaux`,
+                    `GET    ${apiBase}/vaisseaux/:id`,
+                    `POST   ${apiBase}/vaisseaux`,
+                    `PATCH  ${apiBase}/vaisseaux/:id`,
+                    `DELETE ${apiBase}/vaisseaux/:id`
+                ],
+                '⚔️ Armes': [
+                    `GET    ${apiBase}/armes`,
+                    `GET    ${apiBase}/armes/:id`,
+                    `POST   ${apiBase}/armes`,
+                    `PATCH  ${apiBase}/armes/:id`,
+                    `DELETE ${apiBase}/armes/:id`
+                ],
+                '🐉 Monstres': [
+                    `GET    ${apiBase}/monstres`,
+                    `GET    ${apiBase}/monstres/:id`,
+                    `POST   ${apiBase}/monstres`,
+                    `PATCH  ${apiBase}/monstres/:id`,
+                    `DELETE ${apiBase}/monstres/:id`
+                ],
+                '📺 Épisodes': [
+                    `GET    ${apiBase}/episodes`,
+                    `GET    ${apiBase}/episodes/:id`,
+                    `POST   ${apiBase}/episodes`,
+                    `PATCH  ${apiBase}/episodes/:id`,
+                    `DELETE ${apiBase}/episodes/:id`
+                ],
+                '📊 Utilitaires': [
+                    `GET    ${apiBase}/health`,
+                    `GET    ${apiBase}/stats`,
+                    `GET    http://localhost:${PORT}`
+                ]
+            };
+
+            Object.entries(endpoints).forEach(([category, routes]) => {
+                console.log(`\n${category}:`);
+                routes.forEach(route => console.log(`  ${route}`));
+            });
+
+            console.log('━'.repeat(50));
+            console.log(`✅ ${Object.values(endpoints).flat().length} routes disponibles`);
+            console.log(`🚀 Serveur opérationnel sur http://localhost:${PORT}`);
+            console.log(`📋 Documentation complète: http://localhost:${PORT}`);
+        });
+
+    } catch (error) {
+        console.error('❌ Erreur au démarrage:', error);
+        process.exit(1);
+    }
 }
+
+// Gestion propre de l'arrêt
+process.on('SIGTERM', async () => {
+    console.log('🛑 Réception du signal SIGTERM, arrêt en cours...');
+    if (db) {
+        await db.end();
+        console.log('✅ Connexion à la base de données fermée');
+    }
+    process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+    console.log('🛑 Réception du signal SIGINT (Ctrl+C), arrêt en cours...');
+    if (db) {
+        await db.end();
+        console.log('✅ Connexion à la base de données fermée');
+    }
+    process.exit(0);
+});
 
 // Démarrer le serveur
 startServer().catch(error => {
-    console.error('❌ Erreur au démarrage:', error);
+    console.error('❌ Erreur fatale:', error);
     process.exit(1);
 });
