@@ -25,6 +25,7 @@ dist-ssr
 
 # Ignorer le fichier spécifique
 Euh Comment Ss7.txt
+OAUTH2_SETUP.md
 
 # Fichiers de configuration
 .env

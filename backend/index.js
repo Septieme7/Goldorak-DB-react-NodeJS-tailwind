@@ -5,6 +5,12 @@ import mysql from 'mysql2/promise';
 import cors from 'cors';
 import { body, validationResult } from 'express-validator';
 import dotenv from 'dotenv';
+import session from 'express-session';
+import passport from 'passport';
+import cookieParser from 'cookie-parser';
+import { configurePassport } from './config/passport.js';
+import authRoutes from './routes/auth.js';
+import { requireAuth } from './middlewares/authMiddleware.js';
 
 // Charger les variables d'environnement
 dotenv.config();
@@ -29,6 +35,22 @@ app.use(cors({
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cookieParser());
+
+// Configuration des sessions pour Passport
+app.use(session({
+    secret: process.env.SESSION_SECRET || 'votre_secret_session_tres_securise',
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+        secure: NODE_ENV === 'production',
+        maxAge: 24 * 60 * 60 * 1000 // 24 heures
+    }
+}));
+
+// Initialisation de Passport
+app.use(passport.initialize());
+app.use(passport.session());
 
 // Middleware de logging pour le développement
 if (NODE_ENV === 'development') {
@@ -93,7 +115,21 @@ const handleAsync = (fn) => (req, res, next) => {
     Promise.resolve(fn(req, res, next)).catch(next);
 };
 
-// ================ ROUTES PERSONNAGES ================
+// ================ ROUTES D'AUTHENTIFICATION ================
+app.use('/api/v1/auth', authRoutes);
+
+// ================ PROTECTION DES ROUTES API ================
+// Appliquer le middleware d'authentification à toutes les routes /api/v1/* sauf /auth
+app.use('/api/v1', (req, res, next) => {
+    // Exclure les routes d'authentification et de santé
+    if (req.path.startsWith('/auth') || req.path === '/health') {
+        return next();
+    }
+    // Appliquer la protection OAuth2
+    requireAuth(req, res, next);
+});
+
+// ================ ROUTES PERSONNAGES (PROTÉGÉES) ================
 app.get('/api/v1/personnages', handleAsync(async (req, res) => {
     const [rows] = await db.query('SELECT * FROM personnages ORDER BY id');
     res.json({
@@ -1343,6 +1379,9 @@ app.use((req, res) => {
 async function startServer() {
     try {
         await initDatabase();
+
+        // Configurer Passport après l'initialisation de la base de données
+        configurePassport(db);
 
         app.listen(PORT, () => {
             const apiBase = `http://localhost:${PORT}/api/v1`;
