@@ -26,7 +26,7 @@ const ENDPOINT_CONFIG = {
         defaultData: {
             nom_fr: '',
             nom_jp: '',
-            pilote_id: null,
+            pilote_id: '',
             type_robot: '',
             hauteur: 0,
             poids: 0,
@@ -42,7 +42,7 @@ const ENDPOINT_CONFIG = {
             nom_fr: '',
             nom_jp: '',
             type_vaisseau: '',
-            pilote_id: null,
+            pilote_id: '',
             faction: '',
             description: ''
         }
@@ -70,7 +70,7 @@ const ENDPOINT_CONFIG = {
         defaultData: {
             nom_fr: '',
             nom_jp: '',
-            robot_id: null,
+            robot_id: '',
             puissance: '',
             frequence_utilisation: '',
             description: ''
@@ -84,7 +84,7 @@ const ENDPOINT_CONFIG = {
         defaultData: {
             nom_fr: '',
             nom_jp: '',
-            episode_id: null,
+            episode_id: '',
             description: '',
             type_monstre: '',
             taille: 0,

@@ -1,5 +1,6 @@
 import { useFetchData } from '../hooks/useFetchData';
 import Modal from './Modal';
+import DescriptionCell from './DescriptionCell';
 import './Components.css';
 
 function Episodes() {
@@ -69,6 +70,7 @@ function Episodes() {
                         <th>Diffusion JP</th>
                         <th>Diffusion FR</th>
                         <th>Statut</th>
+                        <th>Description</th>
                         <th>Actions</th>
                     </tr>
                     </thead>
@@ -90,6 +92,12 @@ function Episodes() {
                                 <span className={`badge ${episode.numero_fr ? 'badge-success' : 'badge-warning'}`}>
                                     {episode.numero_fr ? 'Diffusé FR' : 'Non diffusé'}
                                 </span>
+                            </td>
+                            <td>
+                                <DescriptionCell
+                                    description={episode.description || episode.resume}
+                                    maxLength={60}
+                                />
                             </td>
                             <td className="actions">
                                 <button

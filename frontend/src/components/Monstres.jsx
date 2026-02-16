@@ -1,5 +1,6 @@
 import { useFetchData } from '../hooks/useFetchData';
 import Modal from './Modal';
+import DescriptionCell from './DescriptionCell';
 import './Components.css';
 
 function Monstres() {
@@ -52,6 +53,8 @@ function Monstres() {
                         <th>Nom JP</th>
                         <th>Épisode</th>
                         <th>Type</th>
+                        <th>Taille</th>
+                        <th>Puissance</th>
                         <th>Description</th>
                         <th>Actions</th>
                     </tr>
@@ -73,11 +76,13 @@ function Monstres() {
                                 </td>
                                 <td>
                                     <span className="badge-type">
-                                        {type}
+                                        {monstre.type_monstre || type}
                                     </span>
                                 </td>
-                                <td className="description-cell">
-                                    {monstre.description ? `${monstre.description.substring(0, 80)}...` : '-'}
+                                <td>{monstre.taille ? `${monstre.taille}m` : '-'}</td>
+                                <td>{monstre.puissance || '-'}</td>
+                                <td>
+                                    <DescriptionCell description={monstre.description} maxLength={80} />
                                 </td>
                                 <td className="actions">
                                     <button

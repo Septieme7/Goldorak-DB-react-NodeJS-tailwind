@@ -1,5 +1,6 @@
 import { useFetchData } from '../hooks/useFetchData';
 import Modal from './Modal';
+import DescriptionCell from './DescriptionCell';
 import './Components.css';
 
 function Armes() {
@@ -77,8 +78,8 @@ function Armes() {
                                     </span>
                                 )}
                             </td>
-                            <td className="description-cell">
-                                {arme.description ? `${arme.description.substring(0, 60)}...` : '-'}
+                            <td>
+                                <DescriptionCell description={arme.description} maxLength={60} />
                             </td>
                             <td className="actions">
                                 <button

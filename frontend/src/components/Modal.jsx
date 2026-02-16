@@ -1,11 +1,13 @@
 // components/Modal.jsx
 import { useState, useEffect } from 'react';
 import { useFormFields, getDefaultData } from '../hooks/useFormFields';
+import { useReferenceData } from '../hooks/useReferenceData';
 import './Modal.css';
 
 function Modal({ item, type, endpoint, onSave, onClose }) {
     const [formData, setFormData] = useState(getDefaultData(endpoint));
     const fields = useFormFields(endpoint);
+    const references = useReferenceData();
 
     // Initialiser formData avec les valeurs de l'item ou des valeurs par défaut
     useEffect(() => {
@@ -23,9 +25,12 @@ function Modal({ item, type, endpoint, onSave, onClose }) {
         let processedValue = value;
 
         if (type === 'number') {
-            processedValue = value === '' ? '' : Number(value);
+            processedValue = value === '' ? null : Number(value);
         } else if (type === 'date') {
             processedValue = value;
+        } else if (type === 'select-one') {
+            // Pour les selects, convertir chaîne vide en null
+            processedValue = value === '' ? null : value;
         }
 
         setFormData({
@@ -57,9 +62,16 @@ function Modal({ item, type, endpoint, onSave, onClose }) {
     };
 
     const renderField = (field) => {
-        const { name, label, type: fieldType, required, min, max } = field;
-        const value = formData[name] || '';
-        const isView = type === 'view';
+        try {
+            const { name, label, type: fieldType, required, min, max, reference, displayField, valueField, options, allowNone } = field;
+            // Pour les selects, on doit garantir une chaîne vide au lieu de null/undefined
+            let value = formData[name];
+            if (fieldType === 'select' && (value === null || value === undefined)) {
+                value = '';
+            } else if (value === null || value === undefined) {
+                value = '';
+            }
+            const isView = type === 'view';
 
         if (isView) {
             return (
@@ -68,6 +80,13 @@ function Modal({ item, type, endpoint, onSave, onClose }) {
                     <div className="view-field">
                         {fieldType === 'textarea' ? (
                             <div style={{ whiteSpace: 'pre-wrap' }}>{value || '-'}</div>
+                        ) : fieldType === 'select' && reference ? (
+                            // Afficher le nom référencé au lieu de l'ID
+                            (() => {
+                                const refData = references[reference];
+                                const refItem = refData?.find(item => item[valueField] === value);
+                                return refItem ? refItem[displayField] : (value || '-');
+                            })()
                         ) : (
                             value || '-'
                         )}
@@ -94,6 +113,63 @@ function Modal({ item, type, endpoint, onSave, onClose }) {
             );
         }
 
+        if (fieldType === 'select') {
+            // Select avec options statiques
+            if (options) {
+                return (
+                    <div key={name} className="form-field">
+                        <label htmlFor={name}>{label}{required && ' *'}</label>
+                        <select
+                            id={name}
+                            name={name}
+                            value={value}
+                            onChange={handleChange}
+                            disabled={isView}
+                            required={required}
+                        >
+                            {allowNone && <option value="">-- Aucun --</option>}
+                            {options.map(opt => (
+                                <option key={opt} value={opt}>{opt}</option>
+                            ))}
+                        </select>
+                    </div>
+                );
+            }
+
+            // Select avec données de référence
+            if (reference) {
+                const refData = references[reference];
+                const refDataArray = Array.isArray(refData) ? refData : [];
+
+                return (
+                    <div key={name} className="form-field">
+                        <label htmlFor={name}>{label}{required && ' *'}</label>
+                        <select
+                            id={name}
+                            name={name}
+                            value={value}
+                            onChange={handleChange}
+                            disabled={isView || references.loading}
+                            required={required}
+                        >
+                            {allowNone && <option value="">-- Aucun --</option>}
+                            {refDataArray.length > 0 ? (
+                                refDataArray.map(item => (
+                                    <option key={item[valueField]} value={item[valueField]}>
+                                        ID {item[valueField]} = {item[displayField]}
+                                    </option>
+                                ))
+                            ) : (
+                                !references.loading && <option value="" disabled>Aucune donnée disponible</option>
+                            )}
+                        </select>
+                        {references.loading && <small style={{ color: '#888' }}>Chargement...</small>}
+                        {references.error && <small style={{ color: 'red' }}>Erreur: {references.error}</small>}
+                    </div>
+                );
+            }
+        }
+
         return (
             <div key={name} className="form-field">
                 <label htmlFor={name}>{label}{required && ' *'}</label>
@@ -112,6 +188,15 @@ function Modal({ item, type, endpoint, onSave, onClose }) {
                 />
             </div>
         );
+        } catch (error) {
+            console.error('Erreur lors du rendu du champ:', field, error);
+            return (
+                <div key={field.name} className="form-field">
+                    <label>{field.label}</label>
+                    <div style={{ color: 'red' }}>Erreur: {error.message}</div>
+                </div>
+            );
+        }
     };
 
     // Fonction pour obtenir un titre personnalisé selon le endpoint

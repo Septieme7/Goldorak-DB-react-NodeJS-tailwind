@@ -59,13 +59,13 @@ export default function(dbConnection) {
     // POST - Créer un nouveau monstre
     router.post('/', async (req, res) => {
         try {
-            const { nom_fr, nom_jp, episode_id, description } = req.body;
+            const { nom_fr, nom_jp, episode_id, description, type_monstre, taille, puissance } = req.body;
 
             // Validation des champs requis
             validerChampsRequis(req.body, ['nom_fr']);
 
             // Vérifier si l'épisode existe (si episode_id est fourni)
-            if (episode_id) {
+            if (episode_id && episode_id !== '') {
                 await validerIdExistant(db, 'episodes', episode_id, 'Épisode');
             }
 
@@ -86,9 +86,17 @@ export default function(dbConnection) {
 
             // Insertion
             const [result] = await db.query(
-                `INSERT INTO monstres (nom_fr, nom_jp, episode_id, description) 
-                 VALUES (?, ?, ?, ?)`,
-                [nom_fr, nom_jp || null, episode_id || null, description || null]
+                `INSERT INTO monstres (nom_fr, nom_jp, episode_id, description, type_monstre, taille, puissance)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [
+                    nom_fr,
+                    nom_jp || null,
+                    (episode_id && episode_id !== '') ? episode_id : null,
+                    description || null,
+                    type_monstre || null,
+                    taille || null,
+                    puissance || null
+                ]
             );
 
             // Récupérer le monstre créé
@@ -112,7 +120,7 @@ export default function(dbConnection) {
     router.patch('/:id', async (req, res) => {
         try {
             const { id } = req.params;
-            const updates = nettoyerDonnees(req.body, ['nom_fr', 'nom_jp', 'episode_id', 'description']);
+            const updates = nettoyerDonnees(req.body, ['nom_fr', 'nom_jp', 'episode_id', 'description', 'type_monstre', 'taille', 'puissance']);
 
             // Vérifier si le monstre existe
             const [existing] = await db.query('SELECT * FROM monstres WHERE id = ?', [id]);
@@ -121,8 +129,10 @@ export default function(dbConnection) {
             }
 
             // Vérifier si l'épisode existe (si episode_id est modifié)
-            if (updates.episode_id) {
+            if (updates.episode_id && updates.episode_id !== '') {
                 await validerIdExistant(db, 'episodes', updates.episode_id, 'Épisode');
+            } else if (updates.episode_id === '') {
+                updates.episode_id = null;
             }
 
             // Vérifier les doublons si nom_fr ou nom_jp sont modifiés
@@ -184,7 +194,7 @@ export default function(dbConnection) {
     router.put('/:id', async (req, res) => {
         try {
             const { id } = req.params;
-            const { nom_fr, nom_jp, episode_id, description } = req.body;
+            const { nom_fr, nom_jp, episode_id, description, type_monstre, taille, puissance } = req.body;
 
             // Vérifier si le monstre existe
             const [existing] = await db.query('SELECT * FROM monstres WHERE id = ?', [id]);
@@ -196,7 +206,7 @@ export default function(dbConnection) {
             validerChampsRequis(req.body, ['nom_fr']);
 
             // Vérifier si l'épisode existe (si episode_id est fourni)
-            if (episode_id) {
+            if (episode_id && episode_id !== '') {
                 await validerIdExistant(db, 'episodes', episode_id, 'Épisode');
             }
 
@@ -218,10 +228,19 @@ export default function(dbConnection) {
 
             // Mise à jour complète
             const [result] = await db.query(
-                `UPDATE monstres 
-                 SET nom_fr = ?, nom_jp = ?, episode_id = ?, description = ?
+                `UPDATE monstres
+                 SET nom_fr = ?, nom_jp = ?, episode_id = ?, description = ?, type_monstre = ?, taille = ?, puissance = ?
                  WHERE id = ?`,
-                [nom_fr, nom_jp || null, episode_id || null, description || null, id]
+                [
+                    nom_fr,
+                    nom_jp || null,
+                    (episode_id && episode_id !== '') ? episode_id : null,
+                    description || null,
+                    type_monstre || null,
+                    taille || null,
+                    puissance || null,
+                    id
+                ]
             );
 
             // Récupérer le monstre mis à jour

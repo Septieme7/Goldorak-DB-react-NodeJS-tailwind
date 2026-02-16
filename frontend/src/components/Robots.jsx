@@ -1,5 +1,6 @@
 import { useFetchData } from '../hooks/useFetchData';
 import Modal from './Modal';
+import DescriptionCell from './DescriptionCell';
 import './Components.css';
 
 function Robots() {
@@ -78,8 +79,8 @@ function Robots() {
                             <td>{robot.hauteur ? `${robot.hauteur}m` : '-'}</td>
                             <td>{robot.poids ? `${robot.poids}t` : '-'}</td>
                             <td>{robot.personnage_nom_fr || 'Automatique'}</td>
-                            <td className="description-cell">
-                                {robot.description ? `${robot.description.substring(0, 60)}...` : '-'}
+                            <td>
+                                <DescriptionCell description={robot.description} maxLength={60} />
                             </td>
                             <td className="actions">
                                 <button

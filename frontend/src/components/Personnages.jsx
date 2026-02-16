@@ -1,5 +1,6 @@
 import { useFetchData } from '../hooks/useFetchData';
 import Modal from './Modal';
+import DescriptionCell from './DescriptionCell';
 import './Components.css';
 
 function Personnages() {
@@ -72,8 +73,8 @@ function Personnages() {
                             </td>
                             <td>{personnage.role || '-'}</td>
                             <td>{personnage.age || '-'}</td>
-                            <td className="description-cell">
-                                {personnage.description ? `${personnage.description.substring(0, 70)}...` : '-'}
+                            <td>
+                                <DescriptionCell description={personnage.description} maxLength={70} />
                             </td>
                             <td className="actions">
                                 <button

@@ -2,16 +2,16 @@
 
 /* Overlay sans background image */
 .modal-overlay {
-    /*position: fixed;*/
+    position: fixed;
     top: 0;
     left: 0;
     right: 0;
     bottom: 0;
-    /*background: rgba(0, 0, 0, 0.85); !* Fond noir semi-transparent seulement *!*/
+    background: rgba(0, 0, 0, 0.85); /* Fond noir semi-transparent */
     display: flex;
     justify-content: center;
-    align-items: center;
-    z-index: 10000;
+    /*align-items: center;*/
+    z-index: 1000;
     animation: fadeIn 0.3s ease-out;
     padding: var(--space-md);
 }
@@ -57,7 +57,7 @@
     z-index: 10;
 }
 
-/* TITRE DU MODAL - CORRIGÉ POUR PLUSIEURS LIGNES */
+/* TITRE DU MODAL - POUR PLUSIEURS LIGNES */
 .modal-content h2 {
     background: rgba(10, 10, 42, 0.9);
     margin: 0;
