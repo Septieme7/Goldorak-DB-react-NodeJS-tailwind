@@ -41,7 +41,7 @@ export function configurePassport(db) {
                 // Créer un nouvel utilisateur
                 const [result] = await db.query(
                     `INSERT INTO users (oauth_provider, oauth_id, email, display_name, avatar_url, created_at)
-                     VALUES (?, ?, ?, ?, ?, NOW())`,
+                    VALUES (?, ?, ?, ?, ?, NOW())`,
                     [
                         'google',
                         profile.id,
@@ -82,7 +82,7 @@ export function configurePassport(db) {
                 // Créer un nouvel utilisateur
                 const [result] = await db.query(
                     `INSERT INTO users (oauth_provider, oauth_id, email, display_name, avatar_url, created_at)
-                     VALUES (?, ?, ?, ?, ?, NOW())`,
+                    VALUES (?, ?, ?, ?, ?, NOW())`,
                     [
                         'github',
                         profile.id,

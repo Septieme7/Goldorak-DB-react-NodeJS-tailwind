@@ -48,7 +48,7 @@ export function requireAuth(req, res, next) {
 }
 
 /**
- * Middleware optionnel - ajoute les infos utilisateur si le token est présent
+ * Middleware optionnel - ajoute les infos utilisateur si le token est présent,
  * mais ne bloque pas l'accès
  */
 export function optionalAuth(req, res, next) {

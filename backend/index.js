@@ -13,7 +13,7 @@ import authRoutes from './routes/auth.js';
 import { requireAuth } from './middlewares/authMiddleware.js';
 
 // Charger les variables d'environnement
-dotenv.config();
+dotenv.config({path:'C://Users/Hp/IdeaProjects/Goldorak-DB-react-NodeJS-tailwind/.env'});
 
 // ================ CONFIGURATION ================
 const app = express();
