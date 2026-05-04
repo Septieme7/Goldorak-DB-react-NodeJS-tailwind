@@ -535,14 +535,14 @@ npm run preview
 │  /login page        │
 └──────┬──────────────┘
        │
-       │ 2. Redirection vers /api/v1/auth/google
+       │ 2. Redirection vers /api/v1/auth/google (ou /github)
        ▼
 ┌─────────────────────┐
 │   Backend Express   │
 │  (Passport.js)      │
 └──────┬──────────────┘
        │
-       │ 3. Redirection vers Google/GitHub
+       │ 3. Redirection vers Google/GitHub OAuth
        ▼
 ┌─────────────────────┐
 │  Google / GitHub    │
@@ -550,7 +550,7 @@ npm run preview
 └──────┬──────────────┘
        │
        │ 4. Utilisateur s'authentifie
-       │ 5. Callback vers backend
+       │ 5. Callback vers backend /auth/callback
        ▼
 ┌─────────────────────┐
 │   Backend Express   │
@@ -571,7 +571,7 @@ npm run preview
        ▼
 ┌─────────────────────┐
 │   Application       │
-│   Authentifiée      │
+│   Authentifiée ✅	  │
 └─────────────────────┘
 ```
 
@@ -661,6 +661,7 @@ npm run preview
 │ • puissance     │
 │ • description   │
 └─────────────────┘
+users (OAuth2 — table indépendante)
 ```
 
 ---
@@ -698,7 +699,7 @@ npm run preview
 
 #### 💬 Tooltip descriptions
 - Activation au clic sur texte tronqué
-- Affichage centré au premier plan (z-index: 99999)
+- Affichage centré au premier plan (`z-index: 99999`)
 - Fermeture automatique au scroll
 - Fermeture par clic sur overlay ou croix
 - Texte agrandi pour meilleure lisibilité
@@ -877,7 +878,7 @@ curl -X PATCH http://localhost:8800/api/v1/robots/1 \
 ### Backend
 
 ```bash
-# Démarrage mode développement (avec nodemon)
+# Démarrage mode développement (avec nodemon si configuré)
 npm run dev
 
 # Démarrage mode production
@@ -899,7 +900,7 @@ npm run build
 # Prévisualisation du build
 npm run preview
 
-# Linter
+# Linter analyse statique du code
 npm run lint
 ```
 

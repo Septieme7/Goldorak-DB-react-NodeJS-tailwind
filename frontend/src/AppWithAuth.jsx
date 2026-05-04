@@ -1,9 +1,9 @@
-// AppWithAuth.jsx - Version avec authentification OAuth2
+// AppWithAuth.jsx - Avec authentification OAuth2 + Lecteur Goldorak
 import { useState } from 'react';
 import GrendizerLogo from './assets/GrendizerLogo.png';
 import './App.css';
 
-// Import des hooks depuis le fichier corrigé
+// Import des hooks
 import { useFetchStats, useApiStatus } from './hooks/useFetchData';
 
 // Import du contexte d'authentification
@@ -17,6 +17,7 @@ import Episodes from './components/Episodes';
 import Monstres from './components/Monstres';
 import Vaisseaux from './components/Vaisseaux';
 import Header from './components/Header';
+import MusicPlayer from './components/MusicPlayer'; // 🎵 Lecteur musical
 
 function AppWithAuth() {
     const [activeTab, setActiveTab] = useState('personnages');
@@ -79,10 +80,11 @@ function AppWithAuth() {
 
     return (
         <div className="app">
-            {/* Header avec infos utilisateur */}
+            {/* Header avec infos utilisateur (avatar, déconnexion) */}
             <Header />
 
-            <header className="header">
+            {/* En-tête principal avec logo + lecteur */}
+            <header className="header" style={{ position: 'relative' }}>
                 <div className="logo-container">
                     <img
                         src={GrendizerLogo}
@@ -91,6 +93,16 @@ function AppWithAuth() {
                     />
                 </div>
                 <p>Base de données complète de l'univers Goldorak</p>
+
+                {/* Lecteur musical discrètement en haut à droite */}
+                <div style={{
+                    position: 'absolute',
+                    top: '20px',
+                    right: '20px',
+                    zIndex: 10
+                }}>
+                    <MusicPlayer />
+                </div>
             </header>
 
             <div className="dashboard">
