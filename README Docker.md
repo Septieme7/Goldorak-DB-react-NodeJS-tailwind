@@ -908,6 +908,36 @@ Il est exécuté automatiquement au premier démarrage du conteneur MySQL.
 --goldorak-light:  #e0e0e0   /* Gris clair           */
 --goldorak-silver: #b0b0b0   /* Argent métallique    */
 ```
+## 🎵 Lecteur musical intégré
+
+Le projet intègre un **lecteur audio léger** aux couleurs de Goldorak, permettant d’écouter 4 titres emblématiques de la série pendant l’utilisation de l’interface.
+
+### Fonctionnalités
+
+| Commande | Icône | Action |
+|----------|-------|--------|
+| Lecture / Pause | ▶️ / ⏸ | Joue ou met en pause la piste courante |
+| Piste précédente | ⏮ | Retour au titre précédent |
+| Piste suivante | ⏭ | Passe au titre suivant |
+| Playlist | 📀 | Menu déroulant pour sélectionner directement un morceau |
+
+### Fichiers audio
+
+Placez vos 4 fichiers `.mp3` dans le dossier :  
+`frontend/public/musiques/`
+
+Noms attendus (ajustables dans `MusicPlayer.jsx`) :
+- `goldorak-generique.mp3`
+- `actarus-deploie-toi.mp3`
+- `combat-spatial.mp3`
+- `vega-attaque.mp3`
+
+### Intégration technique
+
+- **Composant** : `MusicPlayer.jsx` – aucune dépendance externe (API HTML5 Audio)
+- **Styles** : `MusicPlayer.css` – thème spatial (cyan, rouge, fonds transparents)
+- **Position** : en haut à droite de l’en-tête principal (à côté du logo Goldorak)
+- **Volume** : réglé à 50 % par défaut, réglable via le code si besoin
 
 ### Composants principaux
 
@@ -1193,7 +1223,7 @@ Développé avec ❤️ et beaucoup de ☕ pour les fans de Goldorak.
 
 Pour toute question ou problème :
 - 🐛 Ouvrir une issue sur GitHub
-- 📧 Contact : [votre-email]
+- 📧 Contact : lordstiko7@gmail.com
 
 ---
 

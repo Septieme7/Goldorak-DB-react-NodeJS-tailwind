@@ -13,7 +13,9 @@ import authRoutes from './routes/auth.js';
 import { requireAuth } from './middlewares/authMiddleware.js';
 
 // Charger les variables d'environnement
-dotenv.config({path:'C://Users/Hp/IdeaProjects/Goldorak-DB-react-NodeJS-tailwind/.env'});
+// dotenv.config({path:'file://C://Users/Hp/IdeaProjects/Goldorak-DB-react-NodeJS-tailwind/.env'});
+dotenv.config(); // charge automatiquement .env à la racine du projet
+
 
 // ================ CONFIGURATION ================
 const app = express();
@@ -66,11 +68,11 @@ let db;
 async function initDatabase() {
     try {
         db = await mysql.createConnection({
-            host: process.env.DB_HOST || "127.0.0.1",
-            user: process.env.DB_USER || "root",
-            password: process.env.DB_PASSWORD || "",
-            database: process.env.DB_NAME || "goldorak_db",
-            port: process.env.DB_PORT || 3306,
+            host: process.env.DB_HOST ,
+            user: process.env.MYSQL_USER ,
+            password: process.env.MYSQL_PASSWORD ,
+            database: process.env.MYSQL_DATABASE ,
+            port: process.env.DB_PORT ,
             charset: 'utf8mb4'
         });
 
@@ -85,8 +87,8 @@ async function initDatabase() {
         console.error('❌ Erreur de connexion à la base de données:', error.message);
         console.error('Configuration utilisée:', {
             host: process.env.DB_HOST,
-            database: process.env.DB_NAME,
-            user: process.env.DB_USER,
+            database: process.env.MYSQL_DATABASE,
+            user: process.env.MYSQL_USER,
             port: process.env.DB_PORT
         });
 
@@ -177,7 +179,7 @@ app.post('/api/v1/personnages', [
     }
 
     const [result] = await db.query(
-        `INSERT INTO personnages (nom_fr, nom_jp, faction, role, age, description) 
+        `INSERT INTO personnages (nom_fr, nom_jp, faction, role, age, description)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [
             nom_fr.trim(),
@@ -314,7 +316,7 @@ app.get('/api/v1/robots/:id', handleAsync(async (req, res) => {
     const query = `
         SELECT r.*, p.nom_fr as personnage_nom_fr, p.faction as personnage_faction
         FROM robots r
-        LEFT JOIN personnages p ON r.pilote_id = p.id
+                 LEFT JOIN personnages p ON r.pilote_id = p.id
         WHERE r.id = ?
     `;
     const [rows] = await db.query(query, [id]);
@@ -380,9 +382,9 @@ app.post('/api/v1/robots', [
     );
 
     const [newRobot] = await db.query(
-        `SELECT r.*, p.nom_fr as personnage_nom_fr 
-         FROM robots r 
-         LEFT JOIN personnages p ON r.pilote_id = p.id 
+        `SELECT r.*, p.nom_fr as personnage_nom_fr
+         FROM robots r
+                  LEFT JOIN personnages p ON r.pilote_id = p.id
          WHERE r.id = ?`,
         [result.insertId]
     );
@@ -449,9 +451,9 @@ app.patch('/api/v1/robots/:id', handleAsync(async (req, res) => {
     await db.query(query, values);
 
     const [updated] = await db.query(
-        `SELECT r.*, p.nom_fr as personnage_nom_fr 
-         FROM robots r 
-         LEFT JOIN personnages p ON r.pilote_id = p.id 
+        `SELECT r.*, p.nom_fr as personnage_nom_fr
+         FROM robots r
+                  LEFT JOIN personnages p ON r.pilote_id = p.id
          WHERE r.id = ?`,
         [id]
     );
@@ -503,7 +505,7 @@ app.get('/api/v1/vaisseaux', handleAsync(async (req, res) => {
     const query = `
         SELECT v.*, p.nom_fr as pilote_nom_fr, p.faction as pilote_faction
         FROM vaisseaux v
-        LEFT JOIN personnages p ON v.pilote_id = p.id
+                 LEFT JOIN personnages p ON v.pilote_id = p.id
         ORDER BY v.id
     `;
     const [rows] = await db.query(query);
@@ -520,7 +522,7 @@ app.get('/api/v1/vaisseaux/:id', handleAsync(async (req, res) => {
     const query = `
         SELECT v.*, p.nom_fr as pilote_nom_fr, p.faction as pilote_faction
         FROM vaisseaux v
-        LEFT JOIN personnages p ON v.pilote_id = p.id
+                 LEFT JOIN personnages p ON v.pilote_id = p.id
         WHERE v.id = ?
     `;
     const [rows] = await db.query(query, [id]);
@@ -573,7 +575,7 @@ app.post('/api/v1/vaisseaux', [
     }
 
     const [result] = await db.query(
-        `INSERT INTO vaisseaux (nom_fr, nom_jp, type_vaisseau, pilote_id, faction, description) 
+        `INSERT INTO vaisseaux (nom_fr, nom_jp, type_vaisseau, pilote_id, faction, description)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [
             nom_fr.trim(),
@@ -586,9 +588,9 @@ app.post('/api/v1/vaisseaux', [
     );
 
     const [newVaisseau] = await db.query(
-        `SELECT v.*, p.nom_fr as pilote_nom_fr 
-         FROM vaisseaux v 
-         LEFT JOIN personnages p ON v.pilote_id = p.id 
+        `SELECT v.*, p.nom_fr as pilote_nom_fr
+         FROM vaisseaux v
+                  LEFT JOIN personnages p ON v.pilote_id = p.id
          WHERE v.id = ?`,
         [result.insertId]
     );
@@ -656,9 +658,9 @@ app.patch('/api/v1/vaisseaux/:id', [
     await db.query(query, values);
 
     const [updated] = await db.query(
-        `SELECT v.*, p.nom_fr as pilote_nom_fr 
-         FROM vaisseaux v 
-         LEFT JOIN personnages p ON v.pilote_id = p.id 
+        `SELECT v.*, p.nom_fr as pilote_nom_fr
+         FROM vaisseaux v
+                  LEFT JOIN personnages p ON v.pilote_id = p.id
          WHERE v.id = ?`,
         [id]
     );
@@ -698,7 +700,7 @@ app.get('/api/v1/armes', handleAsync(async (req, res) => {
     const query = `
         SELECT a.*, r.nom_fr as robot_nom_fr, r.type_robot
         FROM armes a
-        LEFT JOIN robots r ON a.robot_id = r.id
+                 LEFT JOIN robots r ON a.robot_id = r.id
         ORDER BY a.id
     `;
     const [rows] = await db.query(query);
@@ -715,7 +717,7 @@ app.get('/api/v1/armes/:id', handleAsync(async (req, res) => {
     const query = `
         SELECT a.*, r.nom_fr as robot_nom_fr, r.type_robot
         FROM armes a
-        LEFT JOIN robots r ON a.robot_id = r.id
+                 LEFT JOIN robots r ON a.robot_id = r.id
         WHERE a.id = ?
     `;
     const [rows] = await db.query(query, [id]);
@@ -768,7 +770,7 @@ app.post('/api/v1/armes', [
     }
 
     const [result] = await db.query(
-        `INSERT INTO armes (nom_fr, nom_jp, robot_id, puissance, frequence_utilisation, description) 
+        `INSERT INTO armes (nom_fr, nom_jp, robot_id, puissance, frequence_utilisation, description)
          VALUES (?, ?, ?, ?, ?, ?)`,
         [
             nom_fr.trim(),
@@ -781,9 +783,9 @@ app.post('/api/v1/armes', [
     );
 
     const [newArme] = await db.query(
-        `SELECT a.*, r.nom_fr as robot_nom_fr 
-         FROM armes a 
-         LEFT JOIN robots r ON a.robot_id = r.id 
+        `SELECT a.*, r.nom_fr as robot_nom_fr
+         FROM armes a
+                  LEFT JOIN robots r ON a.robot_id = r.id
          WHERE a.id = ?`,
         [result.insertId]
     );
@@ -893,7 +895,7 @@ app.get('/api/v1/monstres', handleAsync(async (req, res) => {
     const query = `
         SELECT m.*, e.titre_fr as episode_titre_fr
         FROM monstres m
-        LEFT JOIN episodes e ON m.episode_id = e.id
+                 LEFT JOIN episodes e ON m.episode_id = e.id
         ORDER BY m.id
     `;
     const [rows] = await db.query(query);
@@ -910,7 +912,7 @@ app.get('/api/v1/monstres/:id', handleAsync(async (req, res) => {
     const query = `
         SELECT m.*, e.titre_fr as episode_titre_fr
         FROM monstres m
-        LEFT JOIN episodes e ON m.episode_id = e.id
+                 LEFT JOIN episodes e ON m.episode_id = e.id
         WHERE m.id = ?
     `;
     const [rows] = await db.query(query, [id]);
@@ -962,7 +964,7 @@ app.post('/api/v1/monstres', [
     }
 
     const [result] = await db.query(
-        `INSERT INTO monstres (nom_fr, nom_jp, episode_id, description, type_monstre, taille, puissance) 
+        `INSERT INTO monstres (nom_fr, nom_jp, episode_id, description, type_monstre, taille, puissance)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
             nom_fr.trim(),
@@ -976,9 +978,9 @@ app.post('/api/v1/monstres', [
     );
 
     const [newMonstre] = await db.query(
-        `SELECT m.*, e.titre_fr as episode_titre_fr 
-         FROM monstres m 
-         LEFT JOIN episodes e ON m.episode_id = e.id 
+        `SELECT m.*, e.titre_fr as episode_titre_fr
+         FROM monstres m
+                  LEFT JOIN episodes e ON m.episode_id = e.id
          WHERE m.id = ?`,
         [result.insertId]
     );
@@ -1048,9 +1050,9 @@ app.patch('/api/v1/monstres/:id', [
     await db.query(query, values);
 
     const [updated] = await db.query(
-        `SELECT m.*, e.titre_fr as episode_titre_fr 
-         FROM monstres m 
-         LEFT JOIN episodes e ON m.episode_id = e.id 
+        `SELECT m.*, e.titre_fr as episode_titre_fr
+         FROM monstres m
+                  LEFT JOIN episodes e ON m.episode_id = e.id
          WHERE m.id = ?`,
         [id]
     );
@@ -1134,7 +1136,7 @@ app.post('/api/v1/episodes', [
     }
 
     const [result] = await db.query(
-        `INSERT INTO episodes (titre_fr, titre_jp, numero_fr, numero_jp, diffuse_jp, diffuse_fr, resume) 
+        `INSERT INTO episodes (titre_fr, titre_jp, numero_fr, numero_jp, diffuse_jp, diffuse_fr, resume)
          VALUES (?, ?, ?, ?, ?, ?, ?)`,
         [
             titre_fr.trim(),
