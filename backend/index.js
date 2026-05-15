@@ -13,9 +13,7 @@ import authRoutes from './routes/auth.js';
 import { requireAuth } from './middlewares/authMiddleware.js';
 
 // Charger les variables d'environnement
-// dotenv.config({path:'file://C://Users/Hp/IdeaProjects/Goldorak-DB-react-NodeJS-tailwind/.env'});
 dotenv.config(); // charge automatiquement .env à la racine du projet
-
 
 // ================ CONFIGURATION ================
 const app = express();
@@ -38,6 +36,12 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
+
+// Middleware pour forcer l'UTF-8 dans les réponses JSON
+app.use((req, res, next) => {
+    res.setHeader('Content-Type', 'application/json; charset=utf-8');
+    next();
+});
 
 // Configuration des sessions pour Passport
 app.use(session({
@@ -68,15 +72,19 @@ let db;
 async function initDatabase() {
     try {
         db = await mysql.createConnection({
-            host: process.env.DB_HOST ,
-            user: process.env.MYSQL_USER ,
-            password: process.env.MYSQL_PASSWORD ,
-            database: process.env.MYSQL_DATABASE ,
-            port: process.env.DB_PORT ,
+            host: process.env.DB_HOST,
+            user: process.env.MYSQL_USER,
+            password: process.env.MYSQL_PASSWORD,
+            database: process.env.MYSQL_DATABASE,
+            port: process.env.DB_PORT,
             charset: 'utf8mb4'
         });
 
-        console.log(`✅ Connexion à la base de données "${process.env.DB_NAME || 'goldorak_db'}" établie`);
+        // Forcer UTF-8 pour la session MySQL
+        await db.query("SET NAMES utf8mb4");
+        await db.query("SET CHARACTER SET utf8mb4");
+
+        console.log(`✅ Connexion à la base de données "${process.env.MYSQL_DATABASE || 'goldorak_db'}" établie`);
 
         // Tester la connexion
         await db.query('SELECT 1');
@@ -1389,7 +1397,7 @@ async function startServer() {
             const apiBase = `http://localhost:${PORT}/api/v1`;
 
             console.log(`\n✨ ${process.env.APP_NAME || 'Goldorak API'} v${process.env.APP_VERSION || '1.0.0'}`);
-            console.log(`📍 Port: ${PORT} | Env: ${NODE_ENV} | DB: ${process.env.DB_NAME || 'goldorak_db'}`);
+            console.log(`📍 Port: ${PORT} | Env: ${NODE_ENV} | DB: ${process.env.MYSQL_DATABASE || 'goldorak_db'}`);
             console.log(`🔗 Frontend: ${FRONTEND_URL}`);
             console.log(`📅 ${new Date().toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'medium' })}`);
             console.log('━'.repeat(50));
@@ -1454,7 +1462,6 @@ async function startServer() {
             console.log(`🚀 Serveur opérationnel sur http://localhost:${PORT}`);
             console.log(`📋 Documentation complète: http://localhost:${PORT}`);
         });
-
     } catch (error) {
         console.error('❌ Erreur au démarrage:', error);
         process.exit(1);
