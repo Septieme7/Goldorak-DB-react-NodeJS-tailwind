@@ -13,7 +13,7 @@ import authRoutes from './routes/auth.js';
 import { requireAuth } from './middlewares/authMiddleware.js';
 
 // Charger les variables d'environnement
-dotenv.config(); // charge automatiquement .env à la racine du projet
+dotenv.config();
 
 // ================ CONFIGURATION ================
 const app = express();
@@ -129,14 +129,18 @@ const handleAsync = (fn) => (req, res, next) => {
 app.use('/api/v1/auth', authRoutes);
 
 // ================ PROTECTION DES ROUTES API ================
-// Appliquer le middleware d'authentification à toutes les routes /api/v1/* sauf /auth
+// Appliquer le middleware d'authentification à toutes les routes /api/v1/* sauf /auth, /health et /easter-egg
 app.use('/api/v1', (req, res, next) => {
-    // Exclure les routes d'authentification et de santé
-    if (req.path.startsWith('/auth') || req.path === '/health') {
+    if (req.path.startsWith('/auth') || req.path === '/health' || req.path === '/easter-egg') {
         return next();
     }
-    // Appliquer la protection OAuth2
     requireAuth(req, res, next);
+});
+
+// ================ EASTER EGG ROUTE ================
+app.post('/api/v1/easter-egg', (req, res) => {
+    console.log('🔥 Transfert d\'énergie de la Planète Euphor vers le serveur Node... OK.');
+    res.json({ success: true });
 });
 
 // ================ ROUTES PERSONNAGES (PROTÉGÉES) ================
@@ -1293,7 +1297,6 @@ app.get('/api/v1/stats', handleAsync(async (req, res) => {
 // ================ ROUTE DE SANTÉ ================
 app.get('/api/v1/health', handleAsync(async (req, res) => {
     try {
-        // Tester la connexion à la base de données
         await db.query('SELECT 1');
 
         res.json({
@@ -1396,7 +1399,7 @@ async function startServer() {
         app.listen(PORT, () => {
             const apiBase = `http://localhost:${PORT}/api/v1`;
 
-            console.log(`\n✨ ${process.env.APP_NAME || 'Goldorak API'} v${process.env.APP_VERSION || '1.0.0'}`);
+            console.log(`\n✨ ${process.env.APP_NAME || 'Goldorak API'} v${process.env.APP_VERSION || '7.7.7'}`);
             console.log(`📍 Port: ${PORT} | Env: ${NODE_ENV} | DB: ${process.env.MYSQL_DATABASE || 'goldorak_db'}`);
             console.log(`🔗 Frontend: ${FRONTEND_URL}`);
             console.log(`📅 ${new Date().toLocaleString('fr-FR', { dateStyle: 'full', timeStyle: 'medium' })}`);

@@ -1,10 +1,11 @@
-// AppWithAuth.jsx - Avec authentification OAuth2 + Lecteur Goldorak
-import { useState } from 'react';
+// AppWithAuth.jsx - Avec authentification OAuth2 + Lecteur Goldorak + Easter Egg Konami
+import { useState, useRef, useEffect } from 'react';
 import GrendizerLogo from './assets/GrendizerLogo.png';
 import './App.css';
 
 // Import des hooks
 import { useFetchStats, useApiStatus } from './hooks/useFetchData';
+import { useKonamiCode } from './hooks/useKonamiCode';
 
 // Import du contexte d'authentification
 import { useAuth } from './context/AuthContext';
@@ -17,13 +18,18 @@ import Episodes from './components/Episodes';
 import Monstres from './components/Monstres';
 import Vaisseaux from './components/Vaisseaux';
 import Header from './components/Header';
-import MusicPlayer from './components/MusicPlayer'; // 🎵 Lecteur musical
+import MusicPlayer from './components/MusicPlayer';
 
 function AppWithAuth() {
     const [activeTab, setActiveTab] = useState('personnages');
     const { user } = useAuth();
 
-    // Utilisation des hooks - avec gestion des valeurs par défaut
+    // États pour l'easter egg
+    const [showEasterImage, setShowEasterImage] = useState(false);
+    const [isEasterActive, setIsEasterActive] = useState(false);
+    const audioRef = useRef(null);
+
+    // Utilisation des hooks stats et API
     const {
         stats = {
             personnages: 0,
@@ -47,22 +53,57 @@ function AppWithAuth() {
         checkApiStatus();
     };
 
+    // Activation de l'easter egg (appelé par le hook)
+    const activateEasterEgg = () => {
+        setIsEasterActive(true);
+        setShowEasterImage(true);
+
+        if (audioRef.current) {
+            audioRef.current.currentTime = 0; // reprend du début
+            audioRef.current.play().catch(err => console.log("Lecture auto bloquée", err));
+        }
+
+        fetch('/api/v1/easter-egg', { method: 'POST' }).catch(console.error);
+
+        // Masquer l'image après 6 secondes
+        setTimeout(() => setShowEasterImage(false), 10000);
+
+        // Désactiver le curseur et le filtre après 10 secondes (mais la musique continue)
+        setTimeout(() => setIsEasterActive(false), 10000);
+
+        // Optionnel : arrêter la musique après 3 minutes (180000 ms)
+        setTimeout(() => {
+            if (audioRef.current) {
+                audioRef.current.pause();
+                audioRef.current.currentTime = 0;
+            }
+        }, 180000);
+    };
+
+    // Hook Konami Code
+    const konamiActive = useKonamiCode(activateEasterEgg);
+
+    // Gestion du curseur et du filtre CSS pendant l'effet
+    useEffect(() => {
+        if (isEasterActive) {
+            document.body.classList.add('easter-egg-cursor');
+            document.body.classList.add('tailwind-easter-effect');
+        } else {
+            document.body.classList.remove('easter-egg-cursor');
+            document.body.classList.remove('tailwind-easter-effect');
+            // Ne pas arrêter la musique ici, elle est gérée par le timeout dédié
+        }
+    }, [isEasterActive]);
+
     const renderActiveComponent = () => {
         switch(activeTab) {
-            case 'personnages':
-                return <Personnages />;
-            case 'robots':
-                return <Robots />;
-            case 'armes':
-                return <Armes />;
-            case 'episodes':
-                return <Episodes />;
-            case 'monstres':
-                return <Monstres />;
-            case 'vaisseaux':
-                return <Vaisseaux />;
-            default:
-                return <Personnages />;
+            case 'personnages': return <Personnages />;
+            case 'robots': return <Robots />;
+            case 'armes': return <Armes />;
+            case 'episodes': return <Episodes />;
+            case 'monstres': return <Monstres />;
+            case 'vaisseaux': return <Vaisseaux />;
+            default: return <Personnages />;
         }
     };
 
@@ -80,7 +121,7 @@ function AppWithAuth() {
 
     return (
         <div className="app">
-            {/* Header avec infos utilisateur (avatar, déconnexion) */}
+            {/* Header avec infos utilisateur */}
             <Header />
 
             {/* En-tête principal avec logo + lecteur */}
@@ -104,6 +145,16 @@ function AppWithAuth() {
                     <MusicPlayer />
                 </div>
             </header>
+
+            {/* Audio pour l'easter egg */}
+            <audio ref={audioRef} src="/assets/Goldorak-est-mort.mp3" preload="auto" />
+
+            {/* Overlay image easter egg */}
+            {showEasterImage && (
+                <div className="easter-egg-overlay" onClick={() => setShowEasterImage(false)}>
+                    <img src="/assets/easterEGG2.png" alt="Easter Egg" className="easter-egg-image" />
+                </div>
+            )}
 
             <div className="dashboard">
                 <div className="status-panel">
