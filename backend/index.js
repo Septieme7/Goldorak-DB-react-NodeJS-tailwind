@@ -1302,7 +1302,7 @@ app.get('/api/v1/health', handleAsync(async (req, res) => {
             timestamp: new Date().toISOString(),
             database: 'connected',
             environment: NODE_ENV,
-            version: process.env.APP_VERSION || '1.0.0'
+            version: process.env.APP_VERSION || '7.7.7'
         });
     } catch (error) {
         res.status(503).json({
@@ -1320,7 +1320,7 @@ app.get('/', (req, res) => {
     res.json({
         success: true,
         message: `API ${process.env.APP_NAME || 'Goldorak'} - Bienvenue!`,
-        version: process.env.APP_VERSION || '1.0.0',
+        version: process.env.APP_VERSION || '7.7.7',
         environment: NODE_ENV,
         endpoints: {
             personnages: '/api/v1/personnages',

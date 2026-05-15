@@ -299,17 +299,17 @@ Goldorak-DB-react-NodeJS-tailwind/
 ## 🔧 Technologies utilisées
 
 ### Backend
-| Package | Version | Rôle |
-|---------|---------|------|
-| Node.js | ≥ 18.0.0 | Runtime JavaScript |
-| Express | ^5.2.1 | Framework web |
-| MySQL2 | ^3.16.3 | Driver MySQL avec Promises |
-| Passport.js | ^0.7.0 | OAuth2 (Google + GitHub) |
-| express-validator | ^7.3.1 | Validation des données |
-| express-session | — | Gestion des sessions |
-| jsonwebtoken | ^9.0.3 | JWT |
-| cors | ^2.8.6 | Cross-Origin Resource Sharing |
-| dotenv | ^17.2.3 | Variables d'environnement |
+| Package | Version  | Rôle |
+|---------|----------|------|
+| Node.js | ≥ 20.0.0 | Runtime JavaScript |
+| Express | ^5.2.1   | Framework web |
+| MySQL2 | ^3.16.3  | Driver MySQL avec Promises |
+| Passport.js | ^0.7.0   | OAuth2 (Google + GitHub) |
+| express-validator | ^7.3.1   | Validation des données |
+| express-session | —        | Gestion des sessions |
+| jsonwebtoken | ^9.0.3   | JWT |
+| cors | ^2.8.6   | Cross-Origin Resource Sharing |
+| dotenv | ^17.2.3  | Variables d'environnement |
 
 ### Frontend
 | Package | Version | Rôle |
@@ -337,7 +337,7 @@ Goldorak-DB-react-NodeJS-tailwind/
 - ✅ Clés OAuth2 Google et/ou GitHub *(optionnel)*
 
 **Pour le développement local (sans Docker) :**
-- ✅ **Node.js** ≥ 18.0.0 ([Télécharger](https://nodejs.org/))
+- ✅ **Node.js** ≥ 20.0.0 ([Télécharger](https://nodejs.org/))
 - ✅ **MySQL** ≥ 8.0 ([Télécharger](https://dev.mysql.com/downloads/))
 - ✅ **Git** ([Télécharger](https://git-scm.com/))
 
@@ -564,7 +564,7 @@ ports: "5173:5173"
 
 #### `backend/Dockerfile` — Production Node.js
 ```dockerfile
-FROM node:18-alpine
+FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci          # Install propre (respecte package-lock.json)
@@ -575,7 +575,7 @@ CMD ["node", "index.js"]
 
 #### `frontend/Dockerfile.dev` — Dev Vite
 ```dockerfile
-FROM node:18-alpine
+FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
 RUN npm install
@@ -587,7 +587,7 @@ CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
 #### `frontend/Dockerfile` — Production Nginx (build multi-stage)
 ```dockerfile
 # ── Étape 1 : Build React ────────────────────────────────
-FROM node:18-alpine AS builder
+FROM node:20-alpine AS builder
 WORKDIR /app
 COPY package*.json ./
 RUN npm ci
