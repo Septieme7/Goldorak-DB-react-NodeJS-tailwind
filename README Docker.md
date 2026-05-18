@@ -1180,6 +1180,35 @@ npm run lint
 
 ---
 
+## 🥚 Easter Egg — Code Konami
+
+> *Pour les vrais fans de Goldorak... et de jeux vidéo rétro.*
+
+Une surprise secrète est cachée dans l'application. Elle se déclenche sur **n'importe quelle page** de l'interface.
+
+### 🕹️ Comment l'activer ?
+
+Saisissez la séquence légendaire au clavier :
+
+```
+↑  ↑  ↓  ↓  ←  →  ←  →  B  A
+```
+
+> 🎮 La séquence complète doit être entrée **sans délai trop long** entre chaque touche.
+> Fonctionne depuis n'importe quel écran de l'application, sans avoir à cliquer nulle part au préalable.
+
+### ⚙️ Fonctionnement technique
+
+- **Écoute globale** via un `useEffect` sur `window` dans `AppWithAuth.jsx` — actif sur toutes les pages
+- **Séquence surveillée** : `ArrowUp ArrowUp ArrowDown ArrowDown ArrowLeft ArrowRight ArrowLeft ArrowRight KeyB KeyA`
+- Aucune dépendance externe — 100 % natif React + API `keydown`
+
+### 💡 Indice
+
+> *"Le ciel s'embrase quand Goldorak déploie ses ailes..."*
+
+---
+
 ## 🤝 Contribution
 
 Les contributions sont les bienvenues !

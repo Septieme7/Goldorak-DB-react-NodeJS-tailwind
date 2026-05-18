@@ -193,5 +193,11 @@ export const api = {
     // Health check (sans authentification)
     getHealth: () => fetch(`${API_BASE_URL}/health`, {
         headers: getHeaders(false)
-    }).then(handleResponse)
+    }).then(handleResponse),
+
+    // Easter Egg — route publique (pas de token requis)
+    triggerEasterEgg: () => fetch(`${API_BASE_URL}/easter-egg`, {
+        method: 'POST',
+        headers: getHeaders(false)
+    }).then(handleResponse),
 };
