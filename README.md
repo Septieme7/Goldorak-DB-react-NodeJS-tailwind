@@ -1,11 +1,13 @@
-# 🤖 Goldorak Database - Base de données complète de l'univers Goldorak
+# 🤖 Goldorak Database — Base de données complète de l'univers Goldorak
 
 ![Version](https://img.shields.io/badge/version-1.0.0-blue.svg)
 ![Node](https://img.shields.io/badge/node-%3E%3D18.0.0-brightgreen.svg)
 ![React](https://img.shields.io/badge/react-19.2.0-61dafb.svg)
+![Docker](https://img.shields.io/badge/docker-ready-2496ED?logo=docker)
 ![License](https://img.shields.io/badge/license-ISC-yellow.svg)
 
-Une application web full-stack moderne pour gérer et explorer l'univers de Goldorak (UFO Robot Grendizer). Cette base de données interactive permet de cataloguer et consulter tous les personnages, robots, vaisseaux, armes, épisodes et monstres de la série légendaire.
+Une application web full-stack moderne pour gérer et explorer l'univers de Goldorak (UFO Robot Grendizer).
+Cette base de données interactive permet de cataloguer et consulter tous les personnages, robots, vaisseaux, armes, épisodes et monstres de la série légendaire.
 
 ![Goldorak Banner](./frontend/src/assets/GrendizerLogo.png)
 
@@ -17,9 +19,17 @@ Une application web full-stack moderne pour gérer et explorer l'univers de Gold
 - [🎯 Sections principales](#-sections-principales)
 - [🏗️ Architecture du projet](#️-architecture-du-projet)
 - [🔧 Technologies utilisées](#-technologies-utilisées)
-- [📦 Installation](#-installation)
-- [🚀 Démarrage](#-démarrage)
-- [🔐 Authentification](#-authentification)
+- [🔑 Prérequis](#-prérequis)
+- [📦 Installation & Démarrage](#-installation--démarrage)
+  - [🐳 Avec Docker (recommandé)](#-avec-docker-recommandé)
+  - [🛠️ En développement local (sans Docker)](#️-en-développement-local-sans-docker)
+- [🐳 Architecture Docker](#-architecture-docker)
+  - [Services Docker Compose](#services-docker-compose)
+  - [Fichiers Docker](#fichiers-docker)
+  - [Variables d'environnement](#variables-denvironnement)
+  - [Commandes Docker utiles](#commandes-docker-utiles)
+  - [Arrêt & Nettoyage](#arrêt--nettoyage)
+- [🔐 Authentification OAuth2](#-authentification-oauth2)
 - [📚 Structure de la base de données](#-structure-de-la-base-de-données)
 - [🎨 Interface utilisateur](#-interface-utilisateur)
 - [🔌 API REST](#-api-rest)
@@ -40,14 +50,14 @@ Une application web full-stack moderne pour gérer et explorer l'univers de Gold
 - ✅ **Gestion des doublons** automatique
 
 ### 🔐 Authentification OAuth2
-- 🔑 **Google OAuth** - Connexion avec compte Google
-- 🔑 **GitHub OAuth** - Connexion avec compte GitHub
-- 🔑 **JWT Tokens** - Gestion sécurisée des sessions
-- 🔑 **Routes protégées** - Accès sécurisé à l'application
+- 🔑 **Google OAuth** — Connexion avec compte Google
+- 🔑 **GitHub OAuth** — Connexion avec compte GitHub
+- 🔑 **JWT Tokens** — Gestion sécurisée des sessions
+- 🔑 **Routes protégées** — Accès sécurisé à l'application
 
 ### 🎨 Interface moderne
 - 🌌 **Design spatial thématique** inspiré de l'univers Goldorak
-- 📱 **Responsive Design** - Compatible mobile, tablette et desktop
+- 📱 **Responsive Design** — Compatible mobile, tablette et desktop
 - 🎯 **Navigation par onglets** intuitive
 - 💫 **Animations fluides** et transitions CSS
 - 🌈 **Palette de couleurs** cyan, rouge, orange (couleurs iconiques de Goldorak)
@@ -57,6 +67,12 @@ Une application web full-stack moderne pour gérer et explorer l'univers de Gold
 - 🔄 **Actualisation automatique** des données
 - 🟢 **Statut de l'API** en temps réel
 - 👤 **Informations utilisateur** avec photo de profil
+
+### 🐳 Conteneurisation Docker
+- 🏗️ **3 services orchestrés** (MySQL, Backend, Frontend) via Docker Compose
+- 🔄 **Hot-reload** en développement (volumes montés)
+- 🏥 **Health check** automatique — le backend attend MySQL avant de démarrer
+- 🚀 **Build multi-stage** Nginx pour la production frontend
 
 ---
 
@@ -145,9 +161,8 @@ Suivez tous les épisodes de la série.
 - 📝 Titre français / japonais
 - 🔢 Numéro épisode JP / FR
 - 🗓️ Date de diffusion JP / FR
-- 📋 Résumé
-- 📄 Description complète
-- ✅ Statut (Diffusé FR / Non diffusé)
+- 📋 Résumé + Description complète
+- ✅ Statut de diffusion FR
 
 **Fonctionnalités :**
 - Calcul automatique de la saison
@@ -164,8 +179,7 @@ Recensez tous les adversaires et monstres.
 - 📝 Nom français / japonais
 - 📺 Épisode d'apparition (relation)
 - 🏷️ Type (Monstre, Robot, Vaisseau)
-- 📏 Taille (en mètres)
-- ⚡ Puissance
+- 📏 Taille (en mètres) + ⚡ Puissance
 - 📄 Description
 
 **Fonctionnalités :**
@@ -176,88 +190,108 @@ Recensez tous les adversaires et monstres.
 
 ---
 
-## 🏗️ Architecture du projet
-
 ```
-Crud_Node_react/
+# 🏗️ Architecture Complète du Projet Goldorak
+
+## 📁 Structure du Répertoire Principal
+```
+```
+Goldorak-DB-react-NodeJS-tailwind/
 │
-├── 📁 backend/                    # Serveur Node.js + Express
-│   ├── 📁 config/                # Configuration de la base de données
-│   │   └── db.js                 # Connexion MySQL
+├── 📁 backend/                          # 🔌 Serveur Node.js + Express
+│   ├── 📁 config/                       # Configuration générale
+│   │   └── 🔐 passport.js              # Configuration OAuth2 (Google, GitHub)
 │   │
-│   ├── 📁 middlewares/           # Middlewares Express
-│   │   ├── auth.js               # Authentification JWT
-│   │   └── validation.js         # Validation des données
+│   ├── 📁 database/                     # Schémas et données SQL
+│   │   └── 📊 users.sql                # Schéma table utilisateurs OAuth
 │   │
-│   ├── 📁 routes/                # Routes API REST
-│   │   ├── auth.js               # 🔐 Routes d'authentification OAuth2
-│   │   ├── personnages.js        # 👥 CRUD Personnages
-│   │   ├── robots.js             # 🤖 CRUD Robots
-│   │   ├── vaisseaux.js          # 🚀 CRUD Vaisseaux
-│   │   ├── armes.js              # ⚔️ CRUD Armes
-│   │   ├── episodes.js           # 📺 CRUD Épisodes
-│   │   └── monstres.js           # 🐉 CRUD Monstres
+│   ├── 📁 middlewares/                  # Middlewares Express
+│   │   ├── 🛡️ authMiddleware.js        # Protection des routes (JWT verification)
+│   │   └── ✔️ validation.js             # Validation des données entrantes
 │   │
-│   ├── 📁 database/              # Scripts SQL
-│   │   └── users.sql             # Structure table utilisateurs
+│   ├── 📁 routes/                       # Routes API REST
+│   │   ├── 🔐 auth.js                   # Routes authentification OAuth2
+│   │   ├── 👥 personnages.js            # CRUD Personnages (GET, POST, PATCH, DELETE)
+│   │   ├── 🤖 robots.js                 # CRUD Robots & Méchas
+│   │   ├── 🚀 vaisseaux.js              # CRUD Vaisseaux spatiaux
+│   │   ├── ⚔️ armes.js                  # CRUD Armes & attaques spéciales
+│   │   ├── 📺 episodes.js               # CRUD Épisodes
+│   │   └── 🐉 monstres.js               # CRUD Monstres & ennemis
 │   │
-│   ├── .env                      # Variables d'environnement
-│   ├── .env.example              # Template de configuration
-│   ├── index.js                  # 🚀 Point d'entrée serveur
-│   └── package.json              # Dépendances backend
+│   ├── 📁 public/                       # Fichiers statiques (optionnel)
+│   │   ├── 📄 index.html                # Page statique de test
+│   │   ├── 📝 script.js                 # Scripts côté client test
+│   │   └── 🎨 style.css                 # Styles test
+│   │
+│   ├── 🐳 Dockerfile                    # Image Node.js production
+│   ├── 🐳 Dockerfile.dev                # Image Node.js développement
+│   ├── 🔒 .env.example                  # Template variables d'environnement
+│   ├── 🚀 index.js                      # Point d'entrée serveur Express
+│   ├── 📦 package.json                  # Dépendances & scripts npm
+│   └── 📦 package-lock.json             # Verrouillage versions dépendances
 │
-├── 📁 frontend/                   # Application React + Vite
-│   ├── 📁 public/                # Assets publics
-│   │   └── favicon.ico
+├── 📁 frontend/                         # ⚛️ Application React + Vite
+│   ├── 📁 src/                          # Code source React
+│   │   ├── 📁 assets/                   # Images, logos, ressources
+│   │   │   └── 🎨 GrendizerLogo.png     # Logo Goldorak
+│   │   │
+│   │   ├── 📁 components/               # Composants React réutilisables
+│   │   │   ├── 🔐 Login.jsx             # Page connexion OAuth2
+│   │   │   ├── 🔄 AuthCallback.jsx      # Gestion callback OAuth
+│   │   │   ├── 🛡️ ProtectedRoute.jsx    # Wrapper routes protégées
+│   │   │   ├── 📋 Header.jsx            # En-tête avec infos utilisateur
+│   │   │   ├── 🔔 LoadingSpinner.jsx    # Spinner de chargement
+│   │   │   ├── 📝 Modal.jsx             # Modal CRUD universel
+│   │   │   ├── 💬 DescriptionCell.jsx   # Tooltip descriptions détaillées
+│   │   │   ├── 👥 Personnages.jsx       # Gestion des personnages
+│   │   │   ├── 🤖 Robots.jsx            # Gestion des robots
+│   │   │   ├── 🚀 Vaisseaux.jsx         # Gestion des vaisseaux
+│   │   │   ├── ⚔️ Armes.jsx             # Gestion des armes
+│   │   │   ├── 📺 Episodes.jsx          # Gestion des épisodes
+│   │   │   └── 🐉 Monstres.jsx          # Gestion des monstres
+│   │   │
+│   │   ├── 📁 context/                  # Contextes React globaux
+│   │   │   └── 🔐 AuthContext.jsx       # Contexte authentification utilisateur
+│   │   │
+│   │   ├── 📁 hooks/                    # Hooks React personnalisés
+│   │   │   ├── 🎣 useFetchData.js       # Hook CRUD générique (GET, POST, PATCH, DELETE)
+│   │   │   ├── 📋 useFormFields.js      # Configuration dynamique formulaires
+│   │   │   └── 🔗 useReferenceData.js   # Chargement données référence (listes dropdown)
+│   │   │
+│   │   ├── 📁 styles/                   # Fichiers CSS spécifiques
+│   │   │   ├── 💄 Header.css            # Styles en-tête
+│   │   │   ├── 🔐 Login.css             # Styles page connexion
+│   │   │   └── 🎨 Components.css        # Styles composants réutilisables
+│   │   │
+│   │   ├── 🔌 api.js                    # Client API REST (axios/fetch wrapper)
+│   │   ├── 📱 App.jsx                   # Composant principal app
+│   │   ├── 🔐 AppWithAuth.jsx           # Wrapper avec authentification
+│   │   ├── 💄 App.css                   # Styles globaux app
+│   │   ├── 💄 index.css                 # Styles globaux page
+│   │   └── 🚀 main.jsx                  # Point d'entrée React
 │   │
-│   ├── 📁 src/
-│   │   ├── 📁 assets/            # Images et ressources
-│   │   │   ├── GrendizerLogo.png
-│   │   │   ├── bg_Goldorak.jpeg
-│   │   │   └── bg_modal1.jpg
-│   │   │
-│   │   ├── 📁 components/        # Composants React
-│   │   │   ├── Login.jsx         # 🔐 Page de connexion OAuth
-│   │   │   ├── AuthCallback.jsx  # Callback OAuth
-│   │   │   ├── ProtectedRoute.jsx # Route protégée
-│   │   │   ├── Header.jsx        # En-tête avec infos user
-│   │   │   ├── Modal.jsx         # Modal CRUD universel
-│   │   │   ├── DescriptionCell.jsx # Tooltip descriptions
-│   │   │   ├── Personnages.jsx   # 👥 Gestion personnages
-│   │   │   ├── Robots.jsx        # 🤖 Gestion robots
-│   │   │   ├── Vaisseaux.jsx     # 🚀 Gestion vaisseaux
-│   │   │   ├── Armes.jsx         # ⚔️ Gestion armes
-│   │   │   ├── Episodes.jsx      # 📺 Gestion épisodes
-│   │   │   ├── Monstres.jsx      # 🐉 Gestion monstres
-│   │   │   ├── Components.css    # Styles composants
-│   │   │   └── Modal.css         # Styles modal
-│   │   │
-│   │   ├── 📁 context/           # Context API React
-│   │   │   └── AuthContext.jsx   # Contexte d'authentification
-│   │   │
-│   │   ├── 📁 hooks/             # Custom hooks React
-│   │   │   ├── useFetchData.js   # Hook CRUD générique
-│   │   │   ├── useFormFields.js  # Configuration des formulaires
-│   │   │   └── useReferenceData.js # Chargement données référence
-│   │   │
-│   │   ├── 📁 styles/            # Styles globaux
-│   │   │   └── Login.css         # Styles page login
-│   │   │
-│   │   ├── api.js                # 🔌 Client API REST
-│   │   ├── App.jsx               # Composant racine (non utilisé)
-│   │   ├── AppWithAuth.jsx       # 🚀 Application principale
-│   │   ├── App.css               # Styles application
-│   │   ├── index.css             # Styles globaux
-│   │   └── main.jsx              # Point d'entrée React
+│   ├── 📁 public/                       # Fichiers statiques publics
+│   │   └── 🎯 favicon.ico               # Icône du site
 │   │
-│   ├── .env                      # Variables d'environnement
-│   ├── .env.example              # Template de configuration
-│   ├── index.html                # HTML racine
-│   ├── vite.config.js            # Configuration Vite
-│   └── package.json              # Dépendances frontend
+│   ├── 🐳 Dockerfile                    # Image Nginx production (build multi-stage)
+│   ├── 🐳 Dockerfile.dev                # Image Vite développement
+│   ├── 📄 index.html                    # Page HTML entry point
+│   ├── 🔒 .env.example                  # Template variables d'environnement frontend
+│   ├── 📦 package.json                  # Dépendances & scripts npm
+│   ├── 📦 package-lock.json             # Verrouillage versions dépendances
+│   ├── ⚡ vite.config.js                # Configuration Vite build tool
+│   └── 📋 eslint.config.js              # Configuration linter ESLint
 │
-├── OAUTH2_SETUP.md               # 📖 Guide configuration OAuth2
-└── README.md                     # 📄 Ce fichier
+├── 📁 mysql/                            # 🗄️ Base de données
+│   └── 📊 init.sql                      # Schéma complet + données de démo
+│
+├── 🐳 docker-compose.yml                # Orchestration 3 services (MySQL, Backend, Frontend)
+├── 🐳 Dockerfile                        # Dockerfile racine (si multi-project)
+├── 🔒 .env.example                      # Template variables d'environnement Docker
+├── 📋 .gitignore                        # Fichiers ignorés par Git
+├── 📄 README.md                         # Documentation principale (format markdown)
+├── 📄 README Docker.md                  # Documentation Docker (ce fichier)
+└── 🔐 OAUTH2_SETUP.md                   # Guide configuration OAuth2 détaillé
 ```
 
 ---
@@ -265,66 +299,108 @@ Crud_Node_react/
 ## 🔧 Technologies utilisées
 
 ### Backend
-- **Node.js** `>=18.0.0` - Runtime JavaScript
-- **Express** `^5.2.1` - Framework web
-- **MySQL2** `^3.16.3` - Driver MySQL avec Promises
-- **JWT** `^9.0.3` - JSON Web Tokens pour l'authentification
-- **Passport** `^0.7.0` - Authentification OAuth2
-  - `passport-google-oauth20` - Google OAuth
-  - `passport-github2` - GitHub OAuth
-- **Express Validator** `^7.3.1` - Validation des données
-- **CORS** `^2.8.6` - Cross-Origin Resource Sharing
-- **dotenv** `^17.2.3` - Gestion variables d'environnement
+| Package | Version  | Rôle |
+|---------|----------|------|
+| Node.js | ≥ 20.0.0 | Runtime JavaScript |
+| Express | ^5.2.1   | Framework web |
+| MySQL2 | ^3.16.3  | Driver MySQL avec Promises |
+| Passport.js | ^0.7.0   | OAuth2 (Google + GitHub) |
+| express-validator | ^7.3.1   | Validation des données |
+| express-session | —        | Gestion des sessions |
+| jsonwebtoken | ^9.0.3   | JWT |
+| cors | ^2.8.6   | Cross-Origin Resource Sharing |
+| dotenv | ^17.2.3  | Variables d'environnement |
 
 ### Frontend
-- **React** `^19.2.0` - Bibliothèque UI
-- **React Router DOM** `^7.13.0` - Routage côté client
-- **Vite** `7.2.5` - Build tool ultra-rapide
-- **CSS3** - Animations et transitions modernes
+| Package | Version | Rôle |
+|---------|---------|------|
+| React | ^19.2.0 | Bibliothèque UI |
+| React Router DOM | ^7.13.0 | Routage côté client |
+| Vite | 7.2.5 | Build tool ultra-rapide |
+| Tailwind CSS | — | Framework CSS utilitaire |
 
-### Base de données
-- **MySQL** `>=8.0` - SGBD relationnel
+### Infrastructure
+| Outil | Version | Rôle |
+|-------|---------|------|
+| MySQL | 8.0 | SGBD relationnel |
+| Docker | ≥ 24.x | Conteneurisation |
+| Docker Compose | ≥ 2.x | Orchestration multi-services |
+| Nginx | stable-alpine | Serveur web production |
 
 ---
 
-## 📦 Installation
+## 🔑 Prérequis
 
-### Prérequis
+**Pour Docker (recommandé) :**
+- ✅ **Docker Desktop** ≥ 24.x
+- ✅ **Docker Compose** ≥ 2.x
+- ✅ Clés OAuth2 Google et/ou GitHub *(optionnel)*
 
-Avant de commencer, assurez-vous d'avoir installé :
-
-- ✅ **Node.js** >= 18.0.0 ([Télécharger](https://nodejs.org/))
-- ✅ **MySQL** >= 8.0 ([Télécharger](https://dev.mysql.com/downloads/))
+**Pour le développement local (sans Docker) :**
+- ✅ **Node.js** ≥ 20.0.0 ([Télécharger](https://nodejs.org/))
+- ✅ **MySQL** ≥ 8.0 ([Télécharger](https://dev.mysql.com/downloads/))
 - ✅ **Git** ([Télécharger](https://git-scm.com/))
 
-### Étape 1 : Cloner le projet
+---
+
+## 📦 Installation & Démarrage
+
+### 🐳 Avec Docker (recommandé)
 
 ```bash
-git clone <url-du-repo>
-cd Crud_Node_react
+# 1. Cloner le dépôt
+git clone https://github.com/Septieme7/Goldorak-DB-react-NodeJS-tailwind.git
+cd Goldorak-DB-react-NodeJS-tailwind
+
+# 2. Copier et configurer les variables d'environnement
+cp .env.example .env
+# ⚠️ Éditer .env avec tes propres secrets (voir section Variables d'environnement)
+
+# 3. Construire et démarrer tous les services
+docker compose up --build -d
+
+# 4. Vérifier que tout est en ligne
+docker compose ps
 ```
 
-### Étape 2 : Installer les dépendances
+> 🟢 **Accès aux services :**
+> - Frontend (dev) : http://localhost:5173
+> - Backend API   : http://localhost:8800/api/v1
+> - MySQL         : localhost:3306
 
-#### Backend
+---
+
+### 🛠️ En développement local (sans Docker)
+
+#### Étape 1 — Backend
+
 ```bash
 cd backend
 npm install
+
+# Copier et remplir le fichier .env local
+cp .env.example .env
+
+# Démarrage en développement
+npm run dev
 ```
 
-#### Frontend
+#### Étape 2 — Base de données
+
+Créer manuellement la base via `mysql/init.sql` :
+
 ```bash
-cd ../frontend
-npm install
+mysql -u root -p < mysql/init.sql
 ```
 
-### Étape 3 : Configuration de la base de données
+Ou via le client MySQL :
 
 1. **Créer la base de données MySQL :**
 
 ```sql
 CREATE DATABASE goldorak_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 USE goldorak_db;
+-- Puis exécuter le contenu de mysql/init.sql
 ```
 
 2. **Créer les tables :**
@@ -417,100 +493,25 @@ CREATE TABLE users (
 );
 ```
 
-### Étape 4 : Configuration OAuth2
+#### Étape 3 — Frontend
 
-Consultez le fichier `OAUTH2_SETUP.md` pour configurer Google et GitHub OAuth.
-
-**Résumé rapide :**
-
-1. **Google OAuth :**
-   - Créer un projet sur [Google Cloud Console](https://console.cloud.google.com/)
-   - Activer l'API Google+
-   - Créer des identifiants OAuth 2.0
-   - Ajouter les URI de redirection
-
-2. **GitHub OAuth :**
-   - Aller dans Settings → Developer settings → OAuth Apps
-   - Créer une nouvelle OAuth App
-   - Configurer les callback URLs
-
-### Étape 5 : Variables d'environnement
-
-#### Backend `.env`
-
-Copiez `.env.example` vers `.env` et configurez :
-
-```env
-# Base de données
-DB_HOST=localhost
-DB_USER=root
-DB_PASSWORD=votre_mot_de_passe
-DB_NAME=goldorak_db
-DB_PORT=3306
-
-# Serveur
-PORT=8800
-NODE_ENV=development
-
-# JWT
-JWT_SECRET=votre_secret_jwt_super_securise_changez_moi
-JWT_EXPIRES_IN=7d
-
-# OAuth Google
-GOOGLE_CLIENT_ID=votre_google_client_id
-GOOGLE_CLIENT_SECRET=votre_google_client_secret
-GOOGLE_CALLBACK_URL=http://localhost:8800/api/v1/auth/google/callback
-
-# OAuth GitHub
-GITHUB_CLIENT_ID=votre_github_client_id
-GITHUB_CLIENT_SECRET=votre_github_client_secret
-GITHUB_CALLBACK_URL=http://localhost:8800/api/v1/auth/github/callback
-
-# Frontend URL
-FRONTEND_URL=http://localhost:5173
-
-# Session
-SESSION_SECRET=votre_secret_session_super_securise
-```
-
-#### Frontend `.env`
-
-Copiez `.env.example` vers `.env` et configurez :
-
-```env
-VITE_API_URL=http://localhost:8800/api/v1
-```
-
----
-
-## 🚀 Démarrage
-
-### Mode développement
-
-#### Terminal 1 - Backend
-```bash
-cd backend
-npm run dev
-```
-Le serveur démarre sur `http://localhost:8800`
-
-#### Terminal 2 - Frontend
 ```bash
 cd frontend
+npm install
+cp .env.example .env
+# VITE_API_URL=http://localhost:8800/api/v1
 npm run dev
 ```
-L'application démarre sur `http://localhost:5173`
 
-### Mode production
+> L'application démarre sur **http://localhost:5173**
 
-#### Backend
+#### Mode production (sans Docker)
+
 ```bash
-cd backend
-npm start
-```
+# Backend
+cd backend && npm start
 
-#### Frontend
-```bash
+# Frontend — build puis prévisualisation
 cd frontend
 npm run build
 npm run preview
@@ -518,7 +519,197 @@ npm run preview
 
 ---
 
-## 🔐 Authentification
+## 🐳 Architecture Docker
+
+### Services Docker Compose
+
+Le fichier `docker-compose.yml` orchestre **3 services** :
+
+#### 🗄️ Service `db` — MySQL 8.0
+```yaml
+image: mysql:8.0
+container_name: goldorak-db
+ports: "3306:3306"
+```
+- Persistance des données via le volume nommé `mysql_data`
+- Initialisation automatique du schéma via `mysql/init.sql`
+- **Health check** intégré — les services dépendants attendent MySQL avant de démarrer
+
+#### ⚙️ Service `backend` — Node.js / Express
+```yaml
+build: ./backend
+container_name: goldorak-backend
+ports: "8800:8800"
+depends_on:
+  db:
+    condition: service_healthy   # ← attend le health check MySQL
+```
+- Variables d'environnement injectées depuis `.env`
+- Volume monté sur `./backend:/app` pour le hot-reload en développement
+
+#### 🖥️ Service `frontend` — Vite (dev) ou Nginx (prod)
+```yaml
+build:
+  context: ./frontend
+  dockerfile: Dockerfile.dev     # ← Vite dev server (port 5173)
+container_name: goldorak-frontend
+ports: "5173:5173"
+```
+> 💡 **Passage en production :** remplacer `Dockerfile.dev` par `Dockerfile`
+> (build Vite → Nginx, port `5173` → `80`).
+
+---
+
+### Fichiers Docker
+
+#### `backend/Dockerfile` — Production Node.js
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci          # Install propre (respecte package-lock.json)
+COPY . .
+EXPOSE 8800
+CMD ["node", "index.js"]
+```
+
+#### `frontend/Dockerfile.dev` — Dev Vite
+```dockerfile
+FROM node:20-alpine
+WORKDIR /app
+COPY package*.json ./
+RUN npm install
+COPY . .
+EXPOSE 5173
+CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0"]
+```
+
+#### `frontend/Dockerfile` — Production Nginx (build multi-stage)
+```dockerfile
+# ── Étape 1 : Build React ────────────────────────────────
+FROM node:20-alpine AS builder
+WORKDIR /app
+COPY package*.json ./
+RUN npm ci
+COPY . .
+RUN npm run build          # Génère /app/dist
+
+# ── Étape 2 : Servir avec Nginx ─────────────────────────
+FROM nginx:stable-alpine
+COPY --from=builder /app/dist /usr/share/nginx/html
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]
+```
+
+---
+
+### Variables d'environnement
+
+Copier `.env.example` → `.env` et remplir les valeurs :
+
+```dotenv
+# ── MySQL ──────────────────────────────────────────────────
+MYSQL_ROOT_PASSWORD=rootpassword      # Mot de passe root MySQL
+MYSQL_DATABASE=goldorak_db            # Nom de la base
+MYSQL_USER=app_user                   # Utilisateur applicatif
+MYSQL_PASSWORD=app_password           # Son mot de passe
+
+# ── Backend ────────────────────────────────────────────────
+PORT=8800                             # Port du serveur Express
+NODE_ENV=production                   # production | development
+FRONTEND_URL=http://localhost         # URL du frontend (CORS)
+CORS_ORIGIN=http://localhost          # Origine autorisée
+
+# ── Sécurité ───────────────────────────────────────────────
+SESSION_SECRET=un_secret_long_et_aleatoire_pour_les_sessions
+JWT_SECRET=un_autre_secret_pour_jwt
+JWT_EXPIRES_IN=7d
+
+# ── OAuth2 Google (optionnel) ──────────────────────────────
+GOOGLE_CLIENT_ID=votre_client_id
+GOOGLE_CLIENT_SECRET=votre_secret
+GOOGLE_CALLBACK_URL=http://localhost:8800/api/v1/auth/google/callback
+
+# ── OAuth2 GitHub (optionnel) ──────────────────────────────
+GITHUB_CLIENT_ID=votre_client_id
+GITHUB_CLIENT_SECRET=votre_secret
+GITHUB_CALLBACK_URL=http://localhost:8800/api/v1/auth/github/callback
+```
+
+> **Frontend** (dans `frontend/.env`) :
+> ```dotenv
+> VITE_API_URL=http://localhost:8800/api/v1
+> ```
+
+---
+
+### Commandes Docker utiles
+
+```bash
+# ── Cycle de vie ───────────────────────────────────────────
+
+# Démarrer tous les services (en arrière-plan)
+docker compose up -d
+
+# Reconstruire après modification du code ou du Dockerfile
+docker compose up --build -d
+
+# Voir l'état des conteneurs
+docker compose ps
+
+# ── Logs ───────────────────────────────────────────────────
+
+# Logs de tous les services en temps réel
+docker compose logs -f
+
+# Logs d'un service spécifique
+docker compose logs -f backend
+docker compose logs -f frontend
+docker compose logs -f db
+
+# ── Base de données ────────────────────────────────────────
+
+# Accéder à MySQL dans le conteneur
+docker exec -it goldorak-db mysql -u app_user -p goldorak_db
+
+# Réinitialiser la base de données (perte de données !)
+docker compose down -v && docker compose up --build -d
+
+# ── Tests API rapides (curl) ───────────────────────────────
+
+# Santé de l'API
+curl http://localhost:8800/api/v1/health
+
+# Lister les personnages
+curl http://localhost:8800/api/v1/personnages
+
+# Statistiques globales
+curl http://localhost:8800/api/v1/stats
+```
+
+---
+
+### Arrêt & Nettoyage
+
+```bash
+# Arrêter les services (données conservées)
+docker compose down
+
+# Arrêter ET supprimer les volumes (⚠️ efface toute la DB)
+docker compose down -v
+
+# Supprimer les images Docker générées localement
+docker compose down --rmi local
+
+# Nettoyage complet (images, volumes, networks orphelins)
+docker system prune -af --volumes
+```
+
+---
+
+## 🔐 Authentification OAuth2
+
+Consultez le fichier `OAUTH2_SETUP.md` pour la configuration complète de Google et GitHub OAuth.
 
 ### Flux OAuth2
 
@@ -571,9 +762,21 @@ npm run preview
        ▼
 ┌─────────────────────┐
 │   Application       │
-│   Authentifiée ✅	  │
+│   Authentifiée ✅  │
 └─────────────────────┘
 ```
+
+### Endpoints d'authentification (non protégés)
+
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `GET` | `/auth/google` | Initier l'auth Google |
+| `GET` | `/auth/google/callback` | Callback Google |
+| `GET` | `/auth/github` | Initier l'auth GitHub |
+| `GET` | `/auth/github/callback` | Callback GitHub |
+| `GET` | `/auth/verify` | Vérifier un token JWT |
+| `GET` | `/auth/logout` | Déconnexion |
+| `GET` | `/auth/me` | Profil utilisateur courant |
 
 ### Sécurité
 
@@ -582,12 +785,13 @@ npm run preview
 - ✅ **CORS configuré** pour empêcher les requêtes non autorisées
 - ✅ **Validation des données** côté client et serveur
 - ✅ **Sessions sécurisées** avec express-session
+- ✅ **Cookies sécurisés** en mode production (`secure: true`)
 
 ---
 
 ## 📚 Structure de la base de données
 
-### Schéma relationnel
+### Schéma des relations
 
 ```
 ┌─────────────────┐
@@ -661,8 +865,32 @@ npm run preview
 │ • puissance     │
 │ • description   │
 └─────────────────┘
+
 users (OAuth2 — table indépendante)
 ```
+
+### Tables
+
+| Table | Description | Clés étrangères |
+|-------|-------------|-----------------|
+| `personnages` | Héros et ennemis de la série | — |
+| `robots` | Robots de combat | `pilote_id → personnages` |
+| `armes` | Arsenal des robots | `robot_id → robots` (CASCADE DELETE) |
+| `vaisseaux` | Vaisseaux spatiaux | `pilote_id → personnages` |
+| `episodes` | Épisodes de la série | — |
+| `monstres` | Mécabêtes de Véga | `episode_id → episodes` |
+| `users` | Utilisateurs OAuth2 | — |
+
+> ⚠️ **Contraintes d'intégrité :**
+> - Impossible de supprimer un **personnage** lié à un robot ou un vaisseau
+> - Impossible de supprimer un **robot** lié à des armes
+> - Impossible de supprimer un **épisode** lié à des monstres
+> - Le charset `utf8mb4` est utilisé pour le support des caractères japonais (名前)
+
+### SQL complet
+
+Le schéma complet avec les données de démonstration est disponible dans `mysql/init.sql`.
+Il est exécuté automatiquement au premier démarrage du conteneur MySQL.
 
 ---
 
@@ -671,15 +899,45 @@ users (OAuth2 — table indépendante)
 ### Palette de couleurs
 
 ```css
---goldorak-space: #0a0a2a      /* Bleu spatial foncé */
---goldorak-blue: #1a4b8c       /* Bleu Goldorak */
---goldorak-red: #ff2e2e        /* Rouge énergétique */
---goldorak-orange: #ff8c00     /* Orange vibrant */
---goldorak-yellow: #ffd700     /* Jaune doré */
---goldorak-energy: #00ffea     /* Cyan électrique */
---goldorak-light: #e0e0e0      /* Gris clair */
---goldorak-silver: #b0b0b0     /* Argent métallique */
+--goldorak-space:  #0a0a2a   /* Bleu spatial foncé  */
+--goldorak-blue:   #1a4b8c   /* Bleu Goldorak        */
+--goldorak-red:    #ff2e2e   /* Rouge énergétique    */
+--goldorak-orange: #ff8c00   /* Orange vibrant       */
+--goldorak-yellow: #ffd700   /* Jaune doré           */
+--goldorak-energy: #00ffea   /* Cyan électrique      */
+--goldorak-light:  #e0e0e0   /* Gris clair           */
+--goldorak-silver: #b0b0b0   /* Argent métallique    */
 ```
+## 🎵 Lecteur musical intégré
+
+Le projet intègre un **lecteur audio léger** aux couleurs de Goldorak, permettant d’écouter 4 titres emblématiques de la série pendant l’utilisation de l’interface.
+
+### Fonctionnalités
+
+| Commande | Icône | Action |
+|----------|-------|--------|
+| Lecture / Pause | ▶️ / ⏸ | Joue ou met en pause la piste courante |
+| Piste précédente | ⏮ | Retour au titre précédent |
+| Piste suivante | ⏭ | Passe au titre suivant |
+| Playlist | 📀 | Menu déroulant pour sélectionner directement un morceau |
+
+### Fichiers audio
+
+Placez vos 4 fichiers `.mp3` dans le dossier :  
+`frontend/public/musiques/`
+
+Noms attendus (ajustables dans `MusicPlayer.jsx`) :
+- `goldorak-generique.mp3`
+- `actarus-deploie-toi.mp3`
+- `combat-spatial.mp3`
+- `vega-attaque.mp3`
+
+### Intégration technique
+
+- **Composant** : `MusicPlayer.jsx` – aucune dépendance externe (API HTML5 Audio)
+- **Styles** : `MusicPlayer.css` – thème spatial (cyan, rouge, fonds transparents)
+- **Position** : en haut à droite de l’en-tête principal (à côté du logo Goldorak)
+- **Volume** : réglé à 50 % par défaut, réglable via le code si besoin
 
 ### Composants principaux
 
@@ -719,6 +977,9 @@ users (OAuth2 — table indépendante)
 http://localhost:8800/api/v1
 ```
 
+> Toutes les routes (sauf `/auth/*` et `/health`) sont **protégées par JWT**.
+> Ajouter le header : `Authorization: Bearer <token>`
+
 ### Authentification
 
 #### Connexion Google
@@ -752,27 +1013,29 @@ Headers: Authorization: Bearer <token>
 }
 ```
 
-### Routes CRUD (Pattern générique)
-
+### Routes CRUD (pattern générique)
 Toutes les entités suivent le même pattern :
 
-#### Récupérer tous les éléments
-```
-GET /{entité}
-Headers: Authorization: Bearer <token>
-```
+| Méthode | Endpoint | Description |
+|---------|----------|-------------|
+| `GET` | `/{entité}` | Liste tous les éléments |
+| `GET` | `/{entité}/:id` | Détail d'un élément |
+| `POST` | `/{entité}` | Créer un élément |
+| `PATCH` | `/{entité}/:id` | Modifier partiellement |
+| `DELETE` | `/{entité}/:id` | Supprimer |
 
-**Réponse :**
-```json
-[
-  {
-    "id": 1,
-    "nom_fr": "Actarus",
-    "nom_jp": "デューク・フリード",
-    ...
-  }
-]
-```
+### Entités disponibles
+
+| Entité | Route | Description |
+|--------|-------|-------------|
+| 👥 Personnages | `/personnages` | Héros et ennemis |
+| 🤖 Robots | `/robots` | Robots de combat |
+| 🚀 Vaisseaux | `/vaisseaux` | Vaisseaux spatiaux |
+| ⚔️ Armes | `/armes` | Arsenal de Goldorak |
+| 📺 Épisodes | `/episodes` | Épisodes de la série |
+| 🐉 Monstres | `/monstres` | Mécabêtes de Véga |
+| 📊 Stats | `/stats` | Comptage global |
+| 🏥 Health | `/health` | Santé de l'API + DB |
 
 #### Récupérer un élément par ID
 ```
@@ -813,14 +1076,13 @@ DELETE /{entité}/{id}
 Headers: Authorization: Bearer <token>
 ```
 
-### Entités disponibles
+### Valeurs d'énumération
 
-- `/personnages` - 👥 Personnages
-- `/robots` - 🤖 Robots
-- `/vaisseaux` - 🚀 Vaisseaux
-- `/armes` - ⚔️ Armes
-- `/episodes` - 📺 Épisodes
-- `/monstres` - 🐉 Monstres
+| Champ | Valeurs acceptées |
+|-------|------------------|
+| `faction` | `"Terre"` \| `"Véga"` \| `"Neutre"` |
+| `type_monstre` | `"Robot"` \| `"Monstre"` \| `"Vaisseau"` |
+| `frequence_utilisation` | `"Très Fréquente"` \| `"Fréquente"` \| `"Occasionnelle"` \| `"Assez Rare"` \| `"Rare"` \| `"Très Rare"` |
 
 ### Exemples de requêtes
 
@@ -835,41 +1097,53 @@ curl -X POST http://localhost:8800/api/v1/personnages \
     "faction": "Terre",
     "role": "Héros principal",
     "age": 19,
-    "description": "Prince de la planète Euphor..."
+    "description": "Prince de la planète Euphor"
   }'
-```
+  ```
 
-#### Modifier un robot
+#### Modifier partiellement un robot
 ```bash
 curl -X PATCH http://localhost:8800/api/v1/robots/1 \
   -H "Authorization: Bearer YOUR_TOKEN" \
   -H "Content-Type: application/json" \
-  -d '{
-    "hauteur": 30.5,
-    "poids": 280.5
-  }'
-```
+  -d '{"hauteur": 30.5, "poids": 280.5}'
+  ```
 
+# Vérifier la santé de l'API (sans token)
+```bash
+curl http://localhost:8800/api/v1/health
+```
+# Voir les statistiques
+```bash
+curl -H "Authorization: Bearer YOUR_TOKEN" \
+  http://localhost:8800/api/v1/stats
+```
 ---
 
 ## ⚙️ Configuration
 
-### Backend - variables clés
+### Variables d'environnement — Backend
 
-| Variable | Description | Valeur par défaut |
-|----------|-------------|-------------------|
-| `PORT` | Port du serveur | `8800` |
+| Variable | Description | Défaut |
+|----------|-------------|--------|
+| `PORT` | Port du serveur Express | `8800` |
+| `NODE_ENV` | Environnement | `development` |
 | `DB_HOST` | Hôte MySQL | `localhost` |
-| `DB_NAME` | Nom base de données | `goldorak_db` |
-| `JWT_SECRET` | Secret pour JWT | À définir |
-| `JWT_EXPIRES_IN` | Durée validité token | `7d` |
-| `FRONTEND_URL` | URL du frontend | `http://localhost:5173` |
+| `DB_NAME` | Nom de la base | `goldorak_db` |
+| `DB_USER` | Utilisateur MySQL | `root` |
+| `DB_PASSWORD` | Mot de passe MySQL | — |
+| `DB_PORT` | Port MySQL | `3306` |
+| `JWT_SECRET` | Secret JWT | À définir |
+| `JWT_EXPIRES_IN` | Durée de validité du token | `7d` |
+| `SESSION_SECRET` | Secret de session | À définir |
+| `FRONTEND_URL` | URL du frontend (CORS) | `http://localhost:5173` |
+| `CORS_ORIGIN` | Origine CORS autorisée | `http://localhost:5173` |
 
-### Frontend - variables clés
+### Variables d'environnement — Frontend
 
-| Variable | Description | Valeur par défaut |
-|----------|-------------|-------------------|
-| `VITE_API_URL` | URL de l'API | `http://localhost:8800/api/v1` |
+| Variable | Description | Défaut |
+|----------|-------------|--------|
+| `VITE_API_URL` | URL de l'API backend | `http://localhost:8800/api/v1` |
 
 ---
 
@@ -906,9 +1180,38 @@ npm run lint
 
 ---
 
+## 🥚 Easter Egg — Code Konami
+
+> *Pour les vrais fans de Goldorak... et de jeux vidéo rétro.*
+
+Une surprise secrète est cachée dans l'application. Elle se déclenche sur **n'importe quelle page** de l'interface.
+
+### 🕹️ Comment l'activer ?
+
+Saisissez la séquence légendaire au clavier :
+
+```
+↑  ↑  ↓  ↓  ←  →  ←  →  B  A
+```
+
+> 🎮 La séquence complète doit être entrée **sans délai trop long** entre chaque touche.
+> Fonctionne depuis n'importe quel écran de l'application, sans avoir à cliquer nulle part au préalable.
+
+### ⚙️ Fonctionnement technique
+
+- **Écoute globale** via un `useEffect` sur `window` dans `AppWithAuth.jsx` — actif sur toutes les pages
+- **Séquence surveillée** : `ArrowUp ArrowUp ArrowDown ArrowDown ArrowLeft ArrowRight ArrowLeft ArrowRight KeyB KeyA`
+- Aucune dépendance externe — 100 % natif React + API `keydown`
+
+### 💡 Indice
+
+> *"Le ciel s'embrase quand Goldorak déploie ses ailes..."*
+
+---
+
 ## 🤝 Contribution
 
-Les contributions sont les bienvenues ! Voici comment contribuer :
+Les contributions sont les bienvenues !
 
 1. **Fork** le projet
 2. **Créer** une branche pour votre fonctionnalité (`git checkout -b feature/AmazingFeature`)
@@ -918,10 +1221,10 @@ Les contributions sont les bienvenues ! Voici comment contribuer :
 
 ### Guidelines
 
-- 📝 Commentez votre code en français
-- ✅ Suivez les conventions de nommage existantes
-- 🧪 Testez vos modifications avant de soumettre
-- 📚 Mettez à jour la documentation si nécessaire
+- 📝 Commentaires en français dans le code
+- ✅ Respecter les conventions de nommage existantes
+- 🧪 Tester les modifications avant de soumettre
+- 📚 Mettre à jour la documentation si nécessaire
 
 ---
 
@@ -939,8 +1242,8 @@ Développé avec ❤️ et beaucoup de ☕ pour les fans de Goldorak.
 
 ## 🙏 Remerciements
 
-- **Go Nagai** - Créateur de l'univers Goldorak
-- **Toei Animation** - Studio d'animation
+- **Go Nagai** — Créateur de l'univers Goldorak
+- **Toei Animation** — Studio d'animation
 - Tous les fans qui maintiennent la flamme de cette série légendaire
 
 ---
@@ -949,7 +1252,7 @@ Développé avec ❤️ et beaucoup de ☕ pour les fans de Goldorak.
 
 Pour toute question ou problème :
 - 🐛 Ouvrir une issue sur GitHub
-- 📧 Contact : [votre-email]
+- 📧 Contact : lordstiko7@gmail.com
 
 ---
 
@@ -962,5 +1265,8 @@ Pour toute question ou problème :
 ![Footer](https://img.shields.io/badge/Made%20with-React%20%26%20Express-blue?style=for-the-badge)
 ![Footer](https://img.shields.io/badge/Database-MySQL-orange?style=for-the-badge)
 ![Footer](https://img.shields.io/badge/Auth-OAuth2-green?style=for-the-badge)
+![Footer](https://img.shields.io/badge/Deploy-Docker-2496ED?style=for-the-badge&logo=docker)
+
+*📅 Dernière mise à jour : Mai 2026 — Goldorak DB v7.7.7*
 
 </div>
